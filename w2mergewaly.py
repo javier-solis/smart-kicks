@@ -7,6 +7,10 @@ example_db = "/var/jail/home/team44/skweek1.db" #database has table called senso
 # example_db = "example.db"
 USERS = ["toy_user"] # eventually, the "sign in" page on the website will add users to this list
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> parent of 9551acd (Update w2mergewaly.py)
 def request_handler(request):
     now = datetime.datetime.now()
     conn = sqlite3.connect(example_db)
