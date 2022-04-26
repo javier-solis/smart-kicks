@@ -134,7 +134,7 @@ def data(type: str, person: str) -> str:
     if type == get_request.trail_table:
 
         with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM loc_data WHERE user=? AND timing>?''', (person, one_hour_ago)).fetchall()
+            allRows = c.execute('''SELECT * FROM loc_data WHERE user=?''', (person)).fetchall()
 
         html_render = make_html_table(("User", "Latitude", "Longitude", "Distance Delta (m)", "Time Delta (s)", "Time (mm-dd-yy, hh:mm:ss)"), allRows)
         
