@@ -13,7 +13,7 @@ from bokeh.embed import json_item
 
 
 # Importing Functions From Other Python Files
-sys.path.append('/var/jail/home/team-44/')
+sys.path.append('/var/jail/home/team-44/map')
 from geo_funcs import *
 
 # Database Stuff
@@ -33,7 +33,6 @@ timePrecision = 0 # round to nearest second
 # Locations
 TuftMedical= (42.34956664091039, -71.06445822683442)
 HarvardStadium = (42.36675464638942, -71.12651381366604)
-
 
 # ==
 
