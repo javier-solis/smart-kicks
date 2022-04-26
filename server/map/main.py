@@ -106,6 +106,8 @@ def get_now_time():
 # ==
 
 def data(type: str, person: str) -> str:
+    one_hour_ago = datetime.now() - timedelta(minutes = 60)
+
     with sqlite3.connect(current_db) as c:
         userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (person,)).fetchone()
 
@@ -120,7 +122,7 @@ def data(type: str, person: str) -> str:
 
     if type == get_request.trail_map:
         with sqlite3.connect(current_db) as c:
-            rows = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? ORDER BY timing DESC;''', (person,)).fetchall() # decreasing in time
+            rows = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? AND timing > ? ORDER BY timing DESC;''', (person, one_hour_ago)).fetchall() # decreasing in time
 
             output: Dict[str, Any] = {"locations": [], "timing": []}
             for row in rows:
@@ -132,17 +134,15 @@ def data(type: str, person: str) -> str:
     if type == get_request.trail_table:
 
         with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM loc_data WHERE user=?''', (person,)).fetchall()
+            allRows = c.execute('''SELECT * FROM loc_data WHERE user=? AND timing > ?''', (person, one_hour_ago)).fetchall()
 
         html_render = make_html_table(("User", "Latitude", "Longitude", "Distance Delta (m)", "Time Delta (s)", "Time (mm-dd-yy, hh:mm:ss)"), allRows)
         
         return html_render
 
     if type == get_request.vel_tables: # for now, showing the latest 1 hour
-        one_hour_ago = datetime.now() - timedelta(minutes = 60)
-
         with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? WHERE timing > ?''', (person, one_hour_ago)).fetchall()
+            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (person, one_hour_ago)).fetchall()
 
         html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time Delta (s)", "Distance Delta (m)", "Time (mm-dd-yy, hh:mm:ss)"), allRows)
         
@@ -151,7 +151,7 @@ def data(type: str, person: str) -> str:
     if type == get_request.vel_graphs:
 
         with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? ORDER by timing ASC''', (person,)).fetchall()
+            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ? ORDER by timing ASC''', (person, one_hour_ago)).fetchall()
 
         if(allRows==None):
             return "No velocity data within the last hour for " + person
