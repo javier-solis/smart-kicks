@@ -6,7 +6,7 @@ function getParam(param){
 }
 
 const user = getParam("user") // gotten from url 
-const mainUrl = "http://608dev-2.net/sandbox/sc/team44/server/map/main.py";
+const mainUrl = "http://608dev-2.net/sandbox/sc/team44/map/main.py";
 
 let locations = {
   "landmarks": [{
