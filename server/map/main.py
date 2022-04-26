@@ -13,11 +13,11 @@ from bokeh.embed import json_item
 
 
 # Importing Functions From Other Python Files
-sys.path.append('/var/jail/home/team-44/map')
+sys.path.append('/var/jail/home/team-44/server/map')
 from geo_funcs import *
 
 # Database Stuff
-current_db = '/var/jail/home/team-44/main.db'
+current_db = '/var/jail/home/team-44/server/main.db'
 
 # Time Stuff
 time_format = "%m-%d-%Y, %H:%M:%S"
