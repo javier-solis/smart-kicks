@@ -106,7 +106,7 @@ def get_now_time():
 # ==
 
 def data(type: str, person: str) -> str:
-    one_hour_ago = datetime.now() - timedelta(minutes = 60)
+    one_hour_ago = get_now_time() - timedelta(minutes = 60)
 
     with sqlite3.connect(current_db) as c:
         userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (person,)).fetchone()
