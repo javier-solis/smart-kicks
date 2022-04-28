@@ -17,7 +17,7 @@ uint32_t ping_timer=0;
 char mainUser[60];
 int n = sprintf(mainUser, "Javier");
 
-bool initial_boot = false;
+bool powered_off = true;
 int BUTTON = 45;
 Button power_button(BUTTON);
 
@@ -43,8 +43,6 @@ const char API_KEY[] = "AIzaSyAQ9SzqkHhV-Gjv-71LohsypXUH447GWX8"; //don't change
 const int MAX_APS = 5;
 
 /* Global variables*/
-uint32_t time_since_sample;      // used for microsecond timing
-
 WiFiClientSecure client; //global WiFiClient Secure object
 WiFiClient client2; //global WiFiClient Secure object
 
@@ -184,20 +182,7 @@ void pingLocation() {
 void setup() {
   Serial.begin(115200);
 
-  // Logging in, sort of...
   pinMode(BUTTON, INPUT_PULLUP);
-  Serial.println("Waiting for user to login");
-
-  while (!initial_boot){
-    if (!digitalRead(BUTTON)){
-      initial_boot=true;
-      Serial.println("Logged in!");
-      break;
-    }
-    delay(1000);
-    Serial.print(".");
-
-  }
 
   //SET UP SCREEN:
   tft.init();  //init screen
@@ -260,6 +245,21 @@ void setup() {
 
 //main body of code
 void loop() {
+  if(powered_off){
+    if(power_button.read()==1){
+      powered_off==false;
+      Serial.println("Powered on");
+    }
+    // trying out some light sleep function here?????
+    return;
+  }
+
+  if(power_button.read()==2){
+    powered_off=true;
+
+    Serial.println("Powered off");
+  }
+
   if (millis() - ping_timer > PING){
     pingLocation();
     ping_timer=millis();
