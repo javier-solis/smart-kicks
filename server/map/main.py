@@ -2,11 +2,9 @@ import sqlite3
 from datetime import datetime, timedelta
 import json
 from typing import *
-from xmlrpc.client import Boolean
 import numpy as np
 import sys
 from bokeh.plotting import figure
-# from pytz import timezone
 from bokeh.embed import json_item
 
 # ==
@@ -58,7 +56,7 @@ class GetRequestTypes():
 
         return result
     
-    def includes(self, that) -> Boolean:
+    def includes(self, that):
         return that in self.all_members()
 
     def size(self) -> int:
@@ -87,7 +85,7 @@ def make_html_table(headers, allRows) -> str:
 
     return html_render
 
-def check_in_bounds(coord: Tuple[float, float]) -> Boolean:
+def check_in_bounds(coord: Tuple[float, float]):
     """
     Returns True if coord is within MIT's rectangular bounds, False otherwise
     """
@@ -97,15 +95,17 @@ def check_in_bounds(coord: Tuple[float, float]) -> Boolean:
     return (top_left[0] < coord[0] and coord[1] < top_left[1] and \
             coord[0] < bot_right[0] and bot_right[0] < coord[1])
 
-def make_datatime_object(string_with_datetime: str) -> datetime:
-    return datetime.strptime(string_with_datetime, '%m-%d-%Y, %H:%M:%S.%f') 
+def make_datatime_object(unix_time: int) -> datetime: # seems a little complex but im not sure what else to do
+    return datetime.strptime( datetime.utcfromtimestamp(unix_time).strftime(time_format) , time_format) 
+
+def get_now_time() -> int:
+    return int(datetime.now().timestamp())
 
 # ==
 
 def data(type: str, person: str) -> str:
-    one_hour_ago = datetime.now() - timedelta(minutes = 60)
+    one_hour_ago = get_now_time() - 60*60
 
-    
     with sqlite3.connect(current_db) as c:
         userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (person,)).fetchone()
 
@@ -176,10 +176,11 @@ def data(type: str, person: str) -> str:
     return "Error."
 
 def request_handler(request) -> str:
+    one_hour_ago: int = get_now_time() - 60*60
 
     with sqlite3.connect(current_db) as c:
-        c.execute('''CREATE TABLE IF NOT EXISTS loc_data (user text, lat real, lon real, dist_delta real, time_delta, timing timestamp)''') # dist_delta in meters
-        c.execute('''CREATE TABLE IF NOT EXISTS vel_data (user text, consec_vel real, avg_vel real, timing timestamp)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS loc_data (user text, lat real, lon real, dist_delta real, time_delta, timing int)''') # dist_delta in meters
+        c.execute('''CREATE TABLE IF NOT EXISTS vel_data (user text, consec_vel real, avg_vel real, timing int)''')
         c.execute('''CREATE TABLE IF NOT EXISTS all_users (user text)''')
 
     if request["method"] == "POST":
@@ -192,28 +193,28 @@ def request_handler(request) -> str:
             return "Error: Invalid POST body."
         
         with sqlite3.connect(current_db) as c:
-            c.execute('''INSERT into all_users VALUES (?)''', (user,))
+            c.execute('''INSERT into all_users VALUES (?)''', (user,)) # edit so that it inserts only if it doesnt exist already in the DB
 
             loc_row = c.execute('''SELECT * FROM loc_data WHERE user=? ORDER BY timing DESC''', (user,)).fetchone()
 
             if loc_row==None: # this is needed if no prior inserts were made (only happens once in a user's lifetime), in order to have initial deltas of 0
-                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, datetime.now() ))
+                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, get_now_time() ))
             else:
 
-                lastTime = make_datatime_object(loc_row[5])
-                timeDelta = (datetime.now() - lastTime).total_seconds()
+                lastTime = int(loc_row[5])
+                timeDelta = get_now_time() - lastTime
                 
                 lastCoord = (loc_row[1], loc_row[2])
                 nowCoord = (lat, lon)
                 distDelta = round(get_distance(nowCoord, lastCoord), distPrecision)
             
-                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, timeDelta, datetime.now()))
+                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, timeDelta, get_now_time()))
 
                 dist_deltas = c.execute('''SELECT dist_delta FROM loc_data ORDER BY timing DESC;''').fetchall()
 
-                latest_time = c.execute('''SELECT timing FROM loc_data ORDER BY timing ASC LIMIT 1;''').fetchone()
-                oldest_time = c.execute('''SELECT timing FROM loc_data ORDER BY timing DESC LIMIT 1;''').fetchone()
-                total_time: float = (make_datatime_object(latest_time[0]) - make_datatime_object(oldest_time[0])).total_seconds()
+                latest_time = c.execute('''SELECT timing FROM loc_data WHERE timing > ? ORDER BY timing ASC LIMIT 1;''', (one_hour_ago,)).fetchone()
+                oldest_time = c.execute('''SELECT timing FROM loc_data WHERE timing > ? ORDER BY timing DESC LIMIT 1;''', (one_hour_ago,)).fetchone()
+                total_time: float = latest_time[0] - oldest_time[0]
 
                 total_distance: float = 0
                 for dist in dist_deltas:
@@ -227,7 +228,7 @@ def request_handler(request) -> str:
                 else:
                     consec_vel = distDelta/timeDelta
 
-                c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, datetime.now()))
+                c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, get_now_time()))
 
         return "Succesfully POSTed location data."
 

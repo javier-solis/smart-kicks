@@ -1,5 +1,5 @@
 let shorthand = locations.landmarks
-
+const landmarksURL = "http://608dev-2.net/sandbox/sc/team44/map/landmarks.py";
 let previous;
 
 function onClick() {
@@ -10,24 +10,25 @@ function onClick() {
 
     this.setStyle({color: 'purple'});
 
-    // const landmarkName = this.getPopup().getContent();
+    const landmarkName = this.getPopup().getContent();
 
-    // fetch(landmarkUpdateURL, {
-    //     method: 'POST',
-    //     headers: {
-    //       "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
-    //     },
-    //     body: `user=${user}&landmark=${landmarkName}`
-    //   })
-    //   .then(res.text())
-    //   .then(res => {
-    //       console.log("Successful POST! Got back this message:", res);
-    //   })
-    //   .catch(err => {
-    //     console.log('Failed to POST. Error message:', err);
-    //   });
+    fetch(landmarksURL, {
+        method: 'POST',
+        headers: {
+          "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        body: `user=${user}&landmark=${landmarkName}`
+      })
+      .then(res.text())
+      .then(res => {
+          console.log("Successful POST! Got back this message:", res);
+      })
+      .catch(err => {
+        console.log('Failed to POST. Error message:', err);
+      });
       
 }
+
 
 
 for(let index=0; index<shorthand.length; index++){
