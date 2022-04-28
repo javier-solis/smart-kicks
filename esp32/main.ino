@@ -4,10 +4,7 @@
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
 #include <string.h> //this is the line of code you are missing
-
-// Declare the button intiialiation stuff here
-
-
+#include <ButtonClass.h>
 
 // Variables I declared:
 
@@ -22,6 +19,7 @@ int n = sprintf(mainUser, "Javier");
 
 bool initial_boot = false;
 int BUTTON = 45;
+Button power_button(BUTTON);
 
 TFT_eSPI tft = TFT_eSPI();
 
