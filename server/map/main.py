@@ -98,15 +98,13 @@ def check_in_bounds(coord: Tuple[float, float]) -> Boolean:
             coord[0] < bot_right[0] and bot_right[0] < coord[1])
 
 def make_datatime_object(string_with_datetime: str) -> datetime:
-    return datetime.strptime(string_with_datetime, time_format) 
-
-def get_now_time():
-    return datetime.now().strftime(time_format)
+    return datetime.strptime(string_with_datetime, '%Y-%m-%d %H:%M:%S.%f') 
 
 # ==
 
 def data(type: str, person: str) -> str:
-    one_hour_ago = datetime.strftime(datetime.now() - timedelta(minutes = 60), time_format) # actual format in DB
+    one_hour_ago = datetime.now() - timedelta(minutes = 60)
+
     
     with sqlite3.connect(current_db) as c:
         userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (person,)).fetchone()
@@ -166,7 +164,7 @@ def data(type: str, person: str) -> str:
             consec_vel.append(float(row[1]))
             avg_vel.append(float(row[2]))
 
-            time_slice = datetime.strptime(row[3], time_format)
+            time_slice = make_datatime_object(row[3])
             time.append(time_slice)
 
         # Week 4: make the graph more colorful/visually pleasing
@@ -199,7 +197,7 @@ def request_handler(request) -> str:
             loc_row = c.execute('''SELECT * FROM loc_data WHERE user=? ORDER BY timing DESC''', (user,)).fetchone()
 
             if loc_row==None: # this is needed if no prior inserts were made (only happens once in a user's lifetime), in order to have initial deltas of 0
-                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, get_now_time() ))
+                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, datetime.now() ))
             else:
 
                 lastTime = make_datatime_object(loc_row[5])
@@ -209,7 +207,7 @@ def request_handler(request) -> str:
                 nowCoord = (lat, lon)
                 distDelta = round(get_distance(nowCoord, lastCoord), distPrecision)
             
-                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, timeDelta, get_now_time()))
+                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, timeDelta, datetime.now()))
 
                 dist_deltas = c.execute('''SELECT dist_delta FROM loc_data ORDER BY timing DESC;''').fetchall()
 
@@ -229,7 +227,7 @@ def request_handler(request) -> str:
                 else:
                     consec_vel = distDelta/timeDelta
 
-                c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, get_now_time()))
+                c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, datetime.now()))
 
         return "Succesfully POSTed location data."
 
