@@ -200,7 +200,7 @@ def request_handler(request) -> str:
                 c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, datetime.now() ))
             else:
 
-                lastTime = make_datatime_object(loc_row[5])
+                lastTime = loc_row[5]
                 timeDelta = (datetime.now() - lastTime).total_seconds()
                 
                 lastCoord = (loc_row[1], loc_row[2])
