@@ -201,7 +201,7 @@ def request_handler(request) -> str:
             else:
 
                 lastTime = make_datatime_object(loc_row[5])
-                timeDelta = round((datetime.now() - lastTime).total_seconds(), timePrecision)
+                timeDelta = (datetime.now() - lastTime).total_seconds()
                 
                 lastCoord = (loc_row[1], loc_row[2])
                 nowCoord = (lat, lon)
