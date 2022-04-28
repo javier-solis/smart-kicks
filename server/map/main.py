@@ -104,7 +104,7 @@ def get_now_time() -> int:
 
 # ==
 
-def data(type: str, person: str) -> str:
+def data(GET_type: str, person: str) -> str:
     one_hour_ago = get_now_time() - 60*60
 
     with sqlite3.connect(current_db) as c:
@@ -113,16 +113,16 @@ def data(type: str, person: str) -> str:
     if(not userExistsCheck[0]):
         return "User has not collected any data."
 
-    if not get_request.includes(type):
+    if not get_request.includes(GET_type):
         return "Invalid data type was given."
 
-    if type == get_request.destination:
+    if GET_type == get_request.destination:
         with sqlite3.connect(current_db) as c:
             row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? AND timing>? ORDER BY timing DESC;''', (person, one_hour_ago)).fetchone()
 
         return row[0]
 
-    if type == get_request.trail_map:
+    if GET_type == get_request.trail_map:
         with sqlite3.connect(current_db) as c:
             rows = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? AND timing>? ORDER BY timing DESC;''', (person, one_hour_ago)).fetchall() # decreasing in time
 
@@ -133,7 +133,7 @@ def data(type: str, person: str) -> str:
 
             return json.dumps(output)
 
-    if type == get_request.trail_table:
+    if GET_type == get_request.trail_table:
 
         with sqlite3.connect(current_db) as c:
             allRows = c.execute('''SELECT * FROM loc_data WHERE user=? AND timing>?''', (person, one_hour_ago)).fetchall()
@@ -142,7 +142,7 @@ def data(type: str, person: str) -> str:
         
         return html_render
 
-    if type == get_request.vel_tables: # for now, showing the latest 1 hour
+    if GET_type == get_request.vel_tables: # for now, showing the latest 1 hour
         with sqlite3.connect(current_db) as c:
             allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (person, one_hour_ago)).fetchall()
 
@@ -150,7 +150,7 @@ def data(type: str, person: str) -> str:
         
         return html_render
 
-    if type == get_request.vel_graphs:
+    if GET_type == get_request.vel_graphs:
 
         with sqlite3.connect(current_db) as c:
             allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing>? ORDER by timing ASC''', (person, one_hour_ago)).fetchall()
@@ -197,42 +197,48 @@ def request_handler(request) -> str:
             return "Error: Invalid POST body."
         
         with sqlite3.connect(current_db) as c:
-            c.execute('''INSERT into all_users VALUES (?)''', (user,)) # edit so that it inserts only if it doesnt exist already in the DB
 
-            loc_row = c.execute('''SELECT * FROM loc_data WHERE user=? ORDER BY timing DESC''', (user,)).fetchone()
+            user_exists = c.execute('''SELECT * FROM all_users WHERE user=?''', (user,)).fetchone()
+        
+            if user_exists==None: # this is needed if we're dealing with a new user
 
-            if loc_row==None: # this is needed if no prior inserts were made (only happens once in a user's lifetime), in order to have initial deltas of 0
+                c.execute('''INSERT into all_users VALUES (?)''', (user,)) # edit so that it inserts only if it doesnt exist already in the DB
                 c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, get_now_time() ))
             else:
 
-                lastTime = int(loc_row[5])
-                timeDelta = get_now_time() - lastTime
-                
-                lastCoord = (loc_row[1], loc_row[2])
-                nowCoord = (lat, lon)
-                distDelta = round(get_distance(nowCoord, lastCoord), distPrecision)
-            
-                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, timeDelta, get_now_time()))
+                lat_lon_timing_latest = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? and timing>? ORDER BY timing DESC LIMIT 1''', (user,one_hour_ago)).fetchone()
+                oldest_time = c.execute('''SELECT timing FROM loc_data WHERE user=? AND timing > ? ORDER BY timing ASC LIMIT 1;''', (user, one_hour_ago)).fetchone()
+                dist_deltas = c.execute('''SELECT dist_delta FROM loc_data WHERE user=? AND timing>? ORDER BY timing DESC;''', (user, one_hour_ago)).fetchall()
 
-                dist_deltas = c.execute('''SELECT dist_delta FROM loc_data ORDER BY timing DESC;''').fetchall()
+                # this should happen once during the 2 hour session
+                if (lat_lon_timing_latest==None or oldest_time==None or len(dist_deltas)==0):
+                    c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, get_now_time() ))
 
-                latest_time = c.execute('''SELECT timing FROM loc_data WHERE timing > ? ORDER BY timing ASC LIMIT 1;''', (one_hour_ago,)).fetchone()
-                oldest_time = c.execute('''SELECT timing FROM loc_data WHERE timing > ? ORDER BY timing DESC LIMIT 1;''', (one_hour_ago,)).fetchone()
-                total_time: float = latest_time[0] - oldest_time[0]
-
-                total_distance: float = 0
-                for dist in dist_deltas:
-                    total_distance += dist[0]
-             
-                avg_vel: float = total_distance/total_time
-                consec_vel: float
-                
-                if timeDelta==0:
-                    consec_vel = 0
                 else:
-                    consec_vel = distDelta/timeDelta
 
-                c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, get_now_time()))
+                    last_time = int(lat_lon_timing_latest[2])
+                    time_delta = get_now_time() - last_time
+                    
+                    last_coord = (lat_lon_timing_latest[0], lat_lon_timing_latest[1])
+                    new_coord = (lat, lon)
+                    distDelta = round(get_distance(new_coord, last_coord), distPrecision)
+                
+                    total_time: int = get_now_time()- oldest_time[0]
+
+                    total_distance: float = 0
+                    for dist in dist_deltas:
+                        total_distance += dist[0]
+
+                    avg_vel: float = total_distance/total_time
+                    consec_vel: float
+                    
+                    if time_delta==0:
+                        consec_vel = 0
+                    else:
+                        consec_vel = distDelta/time_delta
+
+                    c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, time_delta, get_now_time()))
+                    c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, get_now_time()))
 
         return "Succesfully POSTed location data."
 

@@ -1,8 +1,8 @@
-let shorthand = locations.landmarks
-const landmarksURL = "http://608dev-2.net/sandbox/sc/team44/map/landmarks.py";
 let previous;
 
 function onClick() {
+
+    const postURL = mainAddr+serverFileLandmarks;
     if(previous){
         previous.setStyle({color: 'red'});
     }
@@ -12,12 +12,12 @@ function onClick() {
 
     const landmarkName = this.getPopup().getContent();
 
-    fetch(landmarksURL, {
+    fetch(postURL, {
         method: 'POST',
         headers: {
           "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
         },
-        body: `user=${user}&landmark_name=${landmarkName}`
+        body: `user=${username}&landmark_name=${landmarkName}`
       })
       .then(res.text())
       .then(res => {
@@ -30,13 +30,14 @@ function onClick() {
 }
 
 
+const landmarksArray = locations.landmarks;
 
-for(let index=0; index<shorthand.length; index++){
+for(let index=0; index<landmarksArray.length; index++){
 
-    let popupText = shorthand[index].name
+    let popupText = landmarksArray[index].name
 
-    let coord = [shorthand[index].lat, shorthand[index].lon];
+    let coord = [landmarksArray[index].lat, landmarksArray[index].lon];
 
-    landmark = L.circle(coord, 10).bindPopup(popupText).addTo(map).on('click', onClick); // for now, they all have a radius of 15s
+    const landmark = L.circle(coord, 10).bindPopup(popupText).addTo(map).on('click', onClick);
     landmark.setStyle({color: 'red'});
 }
