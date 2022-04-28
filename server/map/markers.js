@@ -17,11 +17,11 @@ function onClick() {
         headers: {
           "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
         },
-        body: `user=${user}&landmark=${landmarkName}`
+        body: `user=${user}&landmark_name=${landmarkName}`
       })
       .then(res.text())
       .then(res => {
-          console.log("Successful POST! Got back this message:", res);
+          console.log("Successful POSTed! Got back this message:", res);
       })
       .catch(err => {
         console.log('Failed to POST. Error message:', err);

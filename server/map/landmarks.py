@@ -1,11 +1,12 @@
 
-from ctypes.wintypes import LANGID
 import sqlite3
-current_db = '/var/jail/home/team44/map/main.db'
+import sys
 from datetime import datetime, timedelta
 
-def get_now_time() -> int:
-    return int(datetime.now().timestamp())
+sys.path.append('/var/jail/home/team44/map/')
+from main import make_html_table, get_now_time
+
+current_db = '/var/jail/home/team44/map/main.db'
 
 def request_handler(request) -> str:
     with sqlite3.connect(current_db) as c:
@@ -26,6 +27,15 @@ def request_handler(request) -> str:
 
 
     if request["method"] == "GET":
-        return "Nothing to see here."
+
+        if("table" in request["values"]):  #just checking for truthiness, really
+            if(len(request["values"]["table"])>0): # so this line isn't really needed
+
+                with sqlite3.connect(current_db) as c:
+                    allRows = c.execute('''SELECT * FROM landmarks''').fetchall()
+
+                html_render = make_html_table(("User", "Landmark Chosen", "Time"), allRows)
+                
+                return html_render
     
     return "Error."

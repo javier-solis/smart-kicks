@@ -24,6 +24,7 @@ let locations = {
   ]    
 }
 
+
 function getJSONGroup(array, key, value) {
   return array.filter((object) => {
       // console.log(object)
@@ -78,10 +79,10 @@ async function userTrail(usr) {
 }
 
 
-
 async function main() {
+  console.log("lol")
   const userData = await userTrail(user);
-  console.log(userData)
+  console.log("lol2")
 
   const marker_radius = 0.5;
   const colorChosen="blue"
@@ -101,6 +102,5 @@ async function main() {
     });
 
 };
-
 
 main();

@@ -41,6 +41,7 @@ class GetRequestTypes():
     """
 
     def __init__(self) -> None:
+        self.destination_table="destination-table"
         self.trail="trail"
         self.trail_table="trail-table"
         self.trail_map="trail-map"
@@ -114,9 +115,12 @@ def data(type: str, person: str) -> str:
 
     if not get_request.includes(type):
         return "Invalid data type was given."
-    
+
     if type == get_request.destination:
-        return "????" # a week 4 issue
+        with sqlite3.connect(current_db) as c:
+            row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? AND timing>? ORDER BY timing DESC;''', (person, one_hour_ago)).fetchone()
+
+        return row[0]
 
     if type == get_request.trail_map:
         with sqlite3.connect(current_db) as c:
@@ -134,7 +138,7 @@ def data(type: str, person: str) -> str:
         with sqlite3.connect(current_db) as c:
             allRows = c.execute('''SELECT * FROM loc_data WHERE user=? AND timing>?''', (person, one_hour_ago)).fetchall()
 
-        html_render = make_html_table(("User", "Latitude", "Longitude", "Distance Delta (m)", "Time Delta (s)", "Time (mm-dd-yy, hh:mm:ss)"), allRows)
+        html_render = make_html_table(("User", "Latitude", "Longitude", "Distance Delta (m)", "Time Delta (s)", "Time (Unix)"), allRows)
         
         return html_render
 
@@ -142,7 +146,7 @@ def data(type: str, person: str) -> str:
         with sqlite3.connect(current_db) as c:
             allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (person, one_hour_ago)).fetchall()
 
-        html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time Delta (s)", "Distance Delta (m)", "Time (mm-dd-yy, hh:mm:ss)"), allRows)
+        html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time Delta (s)", "Distance Delta (m)", "Time (Unix)"), allRows)
         
         return html_render
 
