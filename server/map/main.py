@@ -98,7 +98,7 @@ def check_in_bounds(coord: Tuple[float, float]) -> Boolean:
             coord[0] < bot_right[0] and bot_right[0] < coord[1])
 
 def make_datatime_object(string_with_datetime: str) -> datetime:
-    return datetime.strptime(string_with_datetime, '%Y-%m-%d, %H:%M:%S.%f') 
+    return datetime.strptime(string_with_datetime, '%m-%d-%Y, %H:%M:%S.%f') 
 
 # ==
 
@@ -200,7 +200,7 @@ def request_handler(request) -> str:
                 c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, datetime.now() ))
             else:
 
-                lastTime = loc_row[5]
+                lastTime = make_datatime_object(loc_row[5])
                 timeDelta = (datetime.now() - lastTime).total_seconds()
                 
                 lastCoord = (loc_row[1], loc_row[2])
