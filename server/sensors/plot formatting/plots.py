@@ -8,7 +8,14 @@ example_db = "/var/jail/home/team44/skweek1.db" #database has table called senso
 # USERS = login_w2.users # eventually, the "sign in" page on the website will add users to this list
 login_db = "/var/jail/home/team44/login.db" # contains name of user and time of last login
 steps_db = "/var/jail/home/team44/steps.db"
-
+redirectpage = '''<!DOCTYPE html>
+                <html>
+                <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44/login_w3.py" />
+                </html>
+                <script>
+                document.cookie = "";
+                </script>
+            '''
 def create_login_database():
    conn = sqlite3.connect(login_db)  # connect to that database (will create if it doesn't already exist)
    c = conn.cursor()  # move cursor into database (allows us to execute commands)
@@ -29,20 +36,28 @@ def request_handler(request):
     # t.execute('''CREATE TABLE IF NOT EXISTS login_table (user text, timing timestamp, isLoggedIn int);''') # run a CREATE TABLE command
     # temp.commit()
     # temp.close()
-    create_login_database()
-    temp = sqlite3.connect(login_db)
-    t = temp.cursor()
-    things = t.execute('''SELECT user FROM login_table ORDER BY timing DESC;''').fetchall()
-    temp.commit() # commit commands (VERY IMPORTANT!!)
-    temp.close()
+    # create_login_database()
+    # temp = sqlite3.connect(login_db)
+    # t = temp.cursor()
+    # things = t.execute('''SELECT user FROM login_table ORDER BY timing DESC;''').fetchall()
+    # temp.commit() # commit commands (VERY IMPORTANT!!)
+    # temp.close()
     # return "lmao get trolled yyub"
     # return things
     # lmao = []
     # for thing in things:
     #     lmao.append(thing)
     # return lmao
-    current = things[0][0]
+    # current = things[0][0]
+    current = None
     if request['method'] =="GET":
+        if('user' not in request['values']):
+            # return "you goofed"
+            return redirectpage
+        current = request['values']['user']
+        if(current == ''):
+            # return "stop goofing"
+            return redirectpage
         now = datetime.datetime.now()
         conn = sqlite3.connect(example_db)
         c = conn.cursor()
@@ -126,22 +141,17 @@ def request_handler(request):
         </body>
             {script4}
         <br>
-        <form action="http://608dev-2.net/sandbox/sc/team44/plots.py" method="post">
+        <form action="http://608dev-2.net/sandbox/sc/team44/plots.py?user={current}" method="post">
         <input type="submit">
         </form>
         </html>
-        ''' 
+        '''
         #return some HTTP with graphs here!
     else:
-        redirectpage = '''<!DOCTYPE html>
-                <html>
-                <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44/login_w2.py" />
-                </html>
-            '''
-        create_login_database()
-        conn = sqlite3.connect(login_db)
-        c = conn.cursor()
-        c.execute('''INSERT into login_table VALUES (?,?,?);''',(current, datetime.datetime.now(), 0))
-        conn.commit()
-        conn.close()
+        # create_login_database()
+        # conn = sqlite3.connect(login_db)
+        # c = conn.cursor()
+        # c.execute('''INSERT into login_table VALUES (?,?,?);''',(current, datetime.datetime.now(), 0))
+        # conn.commit()
+        # conn.close()
         return redirectpage
