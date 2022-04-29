@@ -85,6 +85,7 @@ void do_http_request(char* host, char* request, char* response, uint16_t respons
     if (serial) Serial.println("connection failed :/");
     if (serial) Serial.println("wait 0.5 sec...");
     client2.stop();
+    // TODO: add return false or something
   }
 }  
 

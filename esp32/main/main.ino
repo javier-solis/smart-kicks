@@ -4,7 +4,7 @@
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
 #include <string.h> //this is the line of code you are missing
-#include <ButtonClass.h>
+#include "ButtonClass.h"
 
 // Variables I declared:
 
@@ -245,21 +245,25 @@ void setup() {
 
 //main body of code
 void loop() {
+
+  int curr_state = power_button.update();
+
   if(powered_off){
-    if(power_button.read()==1){
-      powered_off==false;
+    if(curr_state==1){
+      powered_off=false;
       Serial.println("Powered on");
     }
     // trying out some light sleep function here?????
     return;
   }
 
-  if(power_button.read()==2){
+  if(curr_state==2){
     powered_off=true;
 
     Serial.println("Powered off");
   }
 
+  
   if (millis() - ping_timer > PING){
     pingLocation();
     ping_timer=millis();

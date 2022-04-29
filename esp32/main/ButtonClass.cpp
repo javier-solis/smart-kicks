@@ -4,7 +4,7 @@
 //enum for button states
 enum button_state {S0,S1,S2,S3,S4};
  
-Button()::Button(int p){
+Button::Button(int p){
     flag = 0;  
     state = S0;
     pin = p;
@@ -30,8 +30,6 @@ int Button::update() {
         state = S1;
         button_change_time = millis();
       }
-
-
     break;
 
     case S1:
