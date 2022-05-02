@@ -1,5 +1,4 @@
 #include <SPI.h>
-#include <TFT_eSPI.h>
 #include <WiFiClientSecure.h>
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
@@ -20,8 +19,6 @@ int n = sprintf(mainUser, "Javier");
 bool powered_off = true;
 int BUTTON = 45;
 Button power_button(BUTTON);
-
-TFT_eSPI tft = TFT_eSPI();
 
 // === WiFi Variables ===
 const uint16_t RESPONSE_TIMEOUT = 6000;
@@ -167,7 +164,7 @@ void pingLocation() {
     response[0] = '\0';
     offset = 0;
 
-    offset += sprintf(request + offset, "POST /sandbox/sc/javsolis/final-project/main.py HTTP/1.1\r\n");
+    offset += sprintf(request + offset, "POST /sandbox/sc/team44/map/main.py HTTP/1.1\r\n");
     offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
     offset += sprintf(request + offset, "Content-Type: application/x-www-form-urlencoded\r\n");
     offset += sprintf(request + offset, "Content-Length: %d\r\n", strlen(json_body));
@@ -183,13 +180,6 @@ void setup() {
   Serial.begin(115200);
 
   pinMode(BUTTON, INPUT_PULLUP);
-
-  //SET UP SCREEN:
-  tft.init();  //init screen
-  tft.setRotation(2); //adjust rotation
-  tft.setTextSize(1); //default font size, change if you want
-  tft.fillScreen(TFT_BLACK); //fill background
-  tft.setTextColor(TFT_PINK, TFT_BLACK); //set color of font to hot pink foreground, black background
 
   delay(100); //wait a bit (100 ms)
 
@@ -241,6 +231,10 @@ void setup() {
     Serial.println(WiFi.status());
     ESP.restart(); // restart the ESP (proper way)
   }
+
+  
+  Serial.println("Powered off");
+
 }
 
 //main body of code

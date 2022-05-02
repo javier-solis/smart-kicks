@@ -41,13 +41,11 @@ class GetRequestTypes():
     """
 
     def __init__(self) -> None:
-        self.destination_table="destination-table"
-        self.trail="trail"
         self.trail_table="trail-table"
-        self.trail_map="trail-map"
+        self.trail_json="trail-map"
         self.destination="destination"
         self.vel_tables="velocity-tables"
-        self.vel_graphs="velocity-graphs"
+        self.vel_json="velocity-json"
     
     def all_members(self) -> set:
         mapping = vars(self)
@@ -104,27 +102,58 @@ def get_now_time() -> int:
 
 # ==
 
-def data(GET_type: str, person: str) -> str:
+def get_data(GET_type: str, user: str) -> str:
+
+    # === Mostly used by ESP32 ===
+
+    if GET_type == get_request.destination:
+        with sqlite3.connect(current_db) as c:
+            row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? ORDER BY timing DESC;''', (user,)).fetchone()
+        
+        if row==None:
+            return "User has never chosen a landmark."
+
+        return row[0]
+
+
     one_hour_ago = get_now_time() - 60*60
 
+    # === Mostly used by web-browser for debugging or the curious ===
+
+    # Checking that the user has ever collected data.
     with sqlite3.connect(current_db) as c:
-        userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (person,)).fetchone()
+        userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (user,)).fetchone()
 
     if(not userExistsCheck[0]):
         return "User has not collected any data."
 
+    # Checking that a valid GET request name was given
     if not get_request.includes(GET_type):
-        return "Invalid data type was given."
+        return "Invalid request name."
 
-    if GET_type == get_request.destination:
+    if GET_type == get_request.trail_table:
+
         with sqlite3.connect(current_db) as c:
-            row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? AND timing>? ORDER BY timing DESC;''', (person, one_hour_ago)).fetchone()
+            allRows = c.execute('''SELECT * FROM loc_data WHERE user=? AND timing>?''', (user, one_hour_ago)).fetchall()
 
-        return row[0]
+        html_render = make_html_table(("User", "Latitude", "Longitude", "Distance Delta (m)", "Time Delta (s)", "Time (Unix)"), allRows)
+        
+        return html_render
 
-    if GET_type == get_request.trail_map:
+
+    elif GET_type == get_request.vel_tables: # for now, showing the latest 1 hour
         with sqlite3.connect(current_db) as c:
-            rows = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? AND timing>? ORDER BY timing DESC;''', (person, one_hour_ago)).fetchall() # decreasing in time
+            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (user, one_hour_ago)).fetchall()
+
+        html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time Delta (s)", "Distance Delta (m)", "Time (Unix)"), allRows)
+        
+        return html_render
+
+    # === Mostly used in JS code ===
+
+    elif GET_type == get_request.trail_json:
+        with sqlite3.connect(current_db) as c:
+            rows = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? AND timing>? ORDER BY timing DESC;''', (user, one_hour_ago)).fetchall() # decreasing in time
 
             output: Dict[str, Any] = {"locations": [], "timing": []}
             for row in rows:
@@ -133,30 +162,9 @@ def data(GET_type: str, person: str) -> str:
 
             return json.dumps(output)
 
-    if GET_type == get_request.trail_table:
-
+    elif GET_type == get_request.vel_json:
         with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM loc_data WHERE user=? AND timing>?''', (person, one_hour_ago)).fetchall()
-
-        html_render = make_html_table(("User", "Latitude", "Longitude", "Distance Delta (m)", "Time Delta (s)", "Time (Unix)"), allRows)
-        
-        return html_render
-
-    if GET_type == get_request.vel_tables: # for now, showing the latest 1 hour
-        with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (person, one_hour_ago)).fetchall()
-
-        html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time Delta (s)", "Distance Delta (m)", "Time (Unix)"), allRows)
-        
-        return html_render
-
-    if GET_type == get_request.vel_graphs:
-
-        with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing>? ORDER by timing ASC''', (person, one_hour_ago)).fetchall()
-
-        if(allRows==None):
-            return "No velocity data within the last hour for " + person
+            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing>? ORDER by timing ASC''', (user, one_hour_ago)).fetchall()
 
         plot = figure(x_axis_label="Time (s)", y_axis_label="Velocity (m/s)", x_axis_type='datetime')
         
@@ -177,7 +185,10 @@ def data(GET_type: str, person: str) -> str:
 
         return json.dumps(json_item(plot, "myplot"))
 
-    return "Error."
+    else:
+        return "Error."
+
+# ==
 
 def request_handler(request) -> str:
     one_hour_ago: int = get_now_time() - 60*60
@@ -243,17 +254,17 @@ def request_handler(request) -> str:
         return "Succesfully POSTed location data."
 
 
-    if request["method"] == "GET":
+    elif request["method"] == "GET":
         if(len(request["values"].keys())>0):
         
             requestType = list(request["values"].keys())[0] # getting the name of the type that interested, there might be a better way to do this !!!!!!!!!!!!!!!!!1
 
             try:
-                person = request["values"][requestType]
+                user = request["values"][requestType]
             except:
                 return "Missing parameter's value."
 
-            return data(requestType, person)
+            return get_data(requestType, user)
 
         else:
             return "Missing a parameter."
