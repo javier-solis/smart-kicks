@@ -70,8 +70,12 @@ flowchart LR
         end
 
         Sensors --INPUT into--> mainESP
-        
-end
+    end
+
+    user -- interacts with --> mainFront 
+    user -- walks around with --> ESP32
+
+
 ```
 
 Note, the following FSM only concerns the "flow of information". The specifics for hardware are described elsewhere.

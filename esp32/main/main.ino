@@ -4,8 +4,61 @@
 #include <ArduinoJson.h>
 #include <string.h> //this is the line of code you are missing
 #include "ButtonClass.h"
+#include "LedControl.h"
+#include "binary.h"
 
-// Variables I declared:
+// LED Matrix Decleration and Variables and helper functions
+LedControl lc = LedControl(35,36,15,1); 
+
+byte center_bitmap[8]= {B00000000,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B00000000};
+byte offValue = B00000000;
+
+
+int blink_time = 500;
+int blink_timer=0;
+
+void center_on(){
+  for(int row=0; row<8; row++){
+      lc.setRow(0,row, center_bitmap[row]);
+  }
+}
+
+void clear_screen(){
+  for(int row=0; row<8; row++){
+      lc.setRow(0,row, offValue);
+  }
+}
+
+
+byte load_inner_left = B00010000;
+byte load_inner_right = B00001000;
+
+int load_state = 0;
+void loading(){
+  clear_screen();
+  if(millis()-blink_timer>=blink_time){
+    switch(load_state){
+      case 0:
+        lc.setRow(0, 2, load_inner_left);
+      break;
+      case 1:
+        lc.setRow(0, 2, load_inner_right);
+      break;
+      case 2:
+        lc.setRow(0, 3, load_inner_left);
+      break;
+      case 3:
+        lc.setRow(0, 3, load_inner_right);
+      load_state=-1; // offset for the ++ later
+      break;
+    }
+    load_state++;
+    blink_timer=millis();
+  }
+}
+
+
+// Global Variables:
 
 const int LOOP_PERIOD = 5; // how often the void loop() should refresh, in ms
 uint32_t primary_timer=0;
@@ -14,9 +67,12 @@ const int PING = 10*1000; // how often the pingLocation should refresh (every 10
 uint32_t ping_timer=0;
 
 char mainUser[60];
-int n = sprintf(mainUser, "Javier");
+int n = sprintf(mainUser, "test1"); // i dont think this is needed but without it there's an error
 
 bool powered_off = true;
+
+// Button Stuff
+
 int BUTTON = 45;
 Button power_button(BUTTON);
 
@@ -179,6 +235,13 @@ void pingLocation() {
 void setup() {
   Serial.begin(115200);
 
+  // For LED matrix:
+  lc.shutdown(0,false);
+  // Set brightness to a medium value
+  lc.setIntensity(0,8);
+  // Clear the display
+  lc.clearDisplay(0);  
+
   pinMode(BUTTON, INPUT_PULLUP);
 
   delay(100); //wait a bit (100 ms)
@@ -213,6 +276,7 @@ void setup() {
   Serial.print("Attempting to connect to ");
   Serial.println(NETWORK);
   while (WiFi.status() != WL_CONNECTED && count < 10) {
+    loading();
     delay(1000);
     Serial.print(".");
     count++;
@@ -237,32 +301,72 @@ void setup() {
 
 }
 
-//main body of code
-void loop() {
+void blinking(){
+  if(millis()-blink_timer>blink_time*2){
+    center_on();
+    blink_timer=millis();
+  }
+  else if(millis() - blink_timer >blink_time){
+    clear_screen();
+  }
 
+}
+
+
+bool on_off_check(){
   int curr_state = power_button.update();
 
   if(powered_off){
+
+    blinking();
+
     if(curr_state==1){
       powered_off=false;
+      center_on();
+
       Serial.println("Powered on");
     }
-    // trying out some light sleep function here?????
-    return;
+    // trying out some light sleep here?????
+    return true;
   }
 
   if(curr_state==2){
     powered_off=true;
-
     Serial.println("Powered off");
   }
+  return false;
+}
 
+
+void loop() {
+  // check that wifi is still connected
+  // if not, go into wifi search mode without crashing
+
+  if off_check(){
+    return;
+  }
   
+
+
   if (millis() - ping_timer > PING){
+
+
+    // sensor readings go in here
+
+    // other get and posts go here
+
     pingLocation();
+
+
+    
     ping_timer=millis();
   } 
     
+
+
+
+
+
   while (millis() - primary_timer < LOOP_PERIOD); //wait for primary timer to increment
   primary_timer = millis();
 }
