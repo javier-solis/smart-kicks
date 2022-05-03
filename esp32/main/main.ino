@@ -1,13 +1,9 @@
 #include <SPI.h>
-#include <TFT_eSPI.h>
 #include <WiFiClientSecure.h>
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
 #include <string.h> //this is the line of code you are missing
-
-// Declare the button intiialiation stuff here
-
-
+#include "ButtonClass.h"
 
 // Variables I declared:
 
@@ -20,10 +16,9 @@ uint32_t ping_timer=0;
 char mainUser[60];
 int n = sprintf(mainUser, "Javier");
 
-bool initial_boot = false;
+bool powered_off = true;
 int BUTTON = 45;
-
-TFT_eSPI tft = TFT_eSPI();
+Button power_button(BUTTON);
 
 // === WiFi Variables ===
 const uint16_t RESPONSE_TIMEOUT = 6000;
@@ -45,8 +40,6 @@ const char API_KEY[] = "AIzaSyAQ9SzqkHhV-Gjv-71LohsypXUH447GWX8"; //don't change
 const int MAX_APS = 5;
 
 /* Global variables*/
-uint32_t time_since_sample;      // used for microsecond timing
-
 WiFiClientSecure client; //global WiFiClient Secure object
 WiFiClient client2; //global WiFiClient Secure object
 
@@ -171,7 +164,7 @@ void pingLocation() {
     response[0] = '\0';
     offset = 0;
 
-    offset += sprintf(request + offset, "POST /sandbox/sc/javsolis/final-project/main.py HTTP/1.1\r\n");
+    offset += sprintf(request + offset, "POST /sandbox/sc/team44/map/main.py HTTP/1.1\r\n");
     offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
     offset += sprintf(request + offset, "Content-Type: application/x-www-form-urlencoded\r\n");
     offset += sprintf(request + offset, "Content-Length: %d\r\n", strlen(json_body));
@@ -186,27 +179,7 @@ void pingLocation() {
 void setup() {
   Serial.begin(115200);
 
-  // Logging in, sort of...
   pinMode(BUTTON, INPUT_PULLUP);
-  Serial.println("Waiting for user to login");
-
-  while (!initial_boot){
-    if (!digitalRead(BUTTON)){
-      initial_boot=true;
-      Serial.println("Logged in!");
-      break;
-    }
-    delay(1000);
-    Serial.print(".");
-
-  }
-
-  //SET UP SCREEN:
-  tft.init();  //init screen
-  tft.setRotation(2); //adjust rotation
-  tft.setTextSize(1); //default font size, change if you want
-  tft.fillScreen(TFT_BLACK); //fill background
-  tft.setTextColor(TFT_PINK, TFT_BLACK); //set color of font to hot pink foreground, black background
 
   delay(100); //wait a bit (100 ms)
 
@@ -258,10 +231,33 @@ void setup() {
     Serial.println(WiFi.status());
     ESP.restart(); // restart the ESP (proper way)
   }
+
+  
+  Serial.println("Powered off");
+
 }
 
 //main body of code
 void loop() {
+
+  int curr_state = power_button.update();
+
+  if(powered_off){
+    if(curr_state==1){
+      powered_off=false;
+      Serial.println("Powered on");
+    }
+    // trying out some light sleep function here?????
+    return;
+  }
+
+  if(curr_state==2){
+    powered_off=true;
+
+    Serial.println("Powered off");
+  }
+
+  
   if (millis() - ping_timer > PING){
     pingLocation();
     ping_timer=millis();

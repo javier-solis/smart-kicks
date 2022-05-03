@@ -1,8 +1,8 @@
-let shorthand = locations.landmarks
-
 let previous;
 
 function onClick() {
+
+    const postURL = mainAddr+serverFileLandmarks;
     if(previous){
         previous.setStyle({color: 'red'});
     }
@@ -10,32 +10,34 @@ function onClick() {
 
     this.setStyle({color: 'purple'});
 
-    // const landmarkName = this.getPopup().getContent();
+    const landmarkName = this.getPopup().getContent();
 
-    // fetch(landmarkUpdateURL, {
-    //     method: 'POST',
-    //     headers: {
-    //       "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
-    //     },
-    //     body: `user=${user}&landmark=${landmarkName}`
-    //   })
-    //   .then(res.text())
-    //   .then(res => {
-    //       console.log("Successful POST! Got back this message:", res);
-    //   })
-    //   .catch(err => {
-    //     console.log('Failed to POST. Error message:', err);
-    //   });
+    fetch(postURL, {
+        method: 'POST',
+        headers: {
+          "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        body: `user=${username}&landmark_name=${landmarkName}`
+      })
+      .then(res.text())
+      .then(res => {
+          console.log("Successful POSTed! Got back this message:", res);
+      })
+      .catch(err => {
+        console.log('Failed to POST. Error message:', err);
+      });
       
 }
 
 
-for(let index=0; index<shorthand.length; index++){
+const landmarksArray = locations.landmarks;
 
-    let popupText = shorthand[index].name
+for(let index=0; index<landmarksArray.length; index++){
 
-    let coord = [shorthand[index].lat, shorthand[index].lon];
+    let popupText = landmarksArray[index].name
 
-    landmark = L.circle(coord, 10).bindPopup(popupText).addTo(map).on('click', onClick); // for now, they all have a radius of 15s
+    let coord = [landmarksArray[index].lat, landmarksArray[index].lon];
+
+    const landmark = L.circle(coord, 10).bindPopup(popupText).addTo(map).on('click', onClick);
     landmark.setStyle({color: 'red'});
 }

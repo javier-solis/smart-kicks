@@ -1,12 +1,5 @@
-const TuftMedical= [42.34956664091039, -71.06445822683442];
-const HarvardStadium = [42.36675464638942, -71.12651381366604];
-
-function getParam(param){
-  return new URLSearchParams(window.location.search).get(param);
-}
-
-const user = getParam("user") // gotten from url 
-const mainUrl = "http://608dev-2.net/sandbox/sc/team44/map/main.py";
+const TuftMedical= [42.349566, -71.064458];
+const HarvardStadium = [42.366754, -71.126513];
 
 let locations = {
   "landmarks": [{
@@ -24,20 +17,39 @@ let locations = {
   ]    
 }
 
+
+const mainAddr = "http://608dev-2.net/sandbox/sc/team44/map/";
+const serverFileMain = "main.py";
+const serverFileLandmarks = "landmarks.py";
+
+
+
+
+// Ideally, the above should be stored in a .json file, but thats been a bit finacky
+
+//======================
+
+// == Helper functions ==
+
+function getParamValue(param){
+  return new URLSearchParams(window.location.search).get(param);
+}
+
 function getJSONGroup(array, key, value) {
   return array.filter((object) => {
-      // console.log(object)
       return object[key] === value;
   })[0];
 };
 
-let origin = (()=>{
-      let stuff = getJSONGroup(locations.landmarks, "name", "Lobby 7")
-      console.log(stuff)
-      return [stuff.lat, stuff.lon];
-    })();
 
-// == Map Setup Stuff == 
+// == Map Setup Stuff ==
+
+let origin = (()=>{
+  let lat_lon = getJSONGroup(locations.landmarks, "name", "Lobby 7")
+  return [lat_lon.lat, lat_lon.lon];
+})();
+
+
 // Main Config
 let map = L.map('map', {
     maxZoom: 19,
@@ -60,46 +72,41 @@ attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap
 L.control.scale({imperial: true, metric: true}).addTo(map);
 
 
+// Retrieving Specific User Data
 
-// retreive specific user data
-async function userTrail(usr) {
-  const userQuery = "?trail-map="+usr;
-  console.log(mainUrl)
-  const response = await fetch(mainUrl+userQuery);
+const username = getParamValue("user")
+
+
+async function userTrail() {
+  const query = "?trail-map="+username;
+  const postURL = mainAddr+serverFileMain+query;
+
+  const response = await fetch(postURL);
 
   if(response.status===200){ //succesfull GET
-
     const jsonResult = await response.json();
-
-    document.getElementById("current-user").innerHTML = usr;
-
+    document.getElementById("currentUser").innerHTML = username;
     return [jsonResult.locations, jsonResult.timing];
   }
 }
 
 
-
 async function main() {
-  const userData = await userTrail(user);
-  console.log(userData)
+  const userData = await userTrail();
 
-  const marker_radius = 0.5;
-  const colorChosen="blue"
+  const markerRadius = 0.5;
+  const pathColor="blue";
 
-  // Add a polyline connecting their data
-  the_line = L.polyline(userData[0], { color: colorChosen }).addTo(map);
-  the_line.bindPopup(`Trail Line: ${user}`);
+  // polyline
+  the_line = L.polyline(userData[0], { color: pathColor }).addTo(map);
+  the_line.bindPopup(`Trail Line: ${username}`);
 
-  userData[0].forEach( (LatLng, i) =>{
-    let circle = L.circle(LatLng, marker_radius).addTo(map);
-    circle.setStyle({color: colorChosen});
-    circle.bindPopup(`Data Point: ${user} @ ${userData[1][i]}`);
-
-    // If we wanted squares instead:
-    // var lineMark = L.rectangle(circle.getBounds()).addTo(map);
-    // lineMark.setStyle({fillColor: 'blue', fillOpacity: 1, color: 'blue'});
-    });
-
+  // markers
+  userData[0].forEach((LatLng, i) =>{
+    let circle = L.circle(LatLng, markerRadius).addTo(map);
+    circle.setStyle({color: pathColor});
+    circle.bindPopup(`Data Point: ${username}, ${userData[1][i]}`);
+  });
 };
 
 

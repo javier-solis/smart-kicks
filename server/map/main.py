@@ -2,11 +2,9 @@ import sqlite3
 from datetime import datetime, timedelta
 import json
 from typing import *
-from xmlrpc.client import Boolean
 import numpy as np
 import sys
 from bokeh.plotting import figure
-# from pytz import timezone
 from bokeh.embed import json_item
 
 # ==
@@ -43,12 +41,11 @@ class GetRequestTypes():
     """
 
     def __init__(self) -> None:
-        self.trail="trail"
         self.trail_table="trail-table"
-        self.trail_map="trail-map"
+        self.trail_json="trail-map"
         self.destination="destination"
         self.vel_tables="velocity-tables"
-        self.vel_graphs="velocity-graphs"
+        self.vel_json="velocity-json"
     
     def all_members(self) -> set:
         mapping = vars(self)
@@ -58,7 +55,7 @@ class GetRequestTypes():
 
         return result
     
-    def includes(self, that) -> Boolean:
+    def includes(self, that):
         return that in self.all_members()
 
     def size(self) -> int:
@@ -87,7 +84,7 @@ def make_html_table(headers, allRows) -> str:
 
     return html_render
 
-def check_in_bounds(coord: Tuple[float, float]) -> Boolean:
+def check_in_bounds(coord: Tuple[float, float]):
     """
     Returns True if coord is within MIT's rectangular bounds, False otherwise
     """
@@ -97,32 +94,66 @@ def check_in_bounds(coord: Tuple[float, float]) -> Boolean:
     return (top_left[0] < coord[0] and coord[1] < top_left[1] and \
             coord[0] < bot_right[0] and bot_right[0] < coord[1])
 
-def make_datatime_object(string_with_datetime: str) -> datetime:
-    return datetime.strptime(string_with_datetime, time_format) 
+def make_datatime_object(unix_time: int) -> datetime: # seems a little complex but im not sure what else to do
+    return datetime.strptime( datetime.utcfromtimestamp(unix_time).strftime(time_format) , time_format) 
 
-def get_now_time():
-    return datetime.now().strftime(time_format)
+def get_now_time() -> int:
+    return int(datetime.now().timestamp())
 
 # ==
 
-def data(type: str, person: str) -> str:
-    one_hour_ago = datetime.strftime(datetime.now() - timedelta(minutes = 60), time_format) # actual format in DB
-    
+def get_data(GET_type: str, user: str) -> str:
+
+    # === Mostly used by ESP32 ===
+
+    if GET_type == get_request.destination:
+        with sqlite3.connect(current_db) as c:
+            row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? ORDER BY timing DESC;''', (user,)).fetchone()
+        
+        if row==None:
+            return "User has never chosen a landmark."
+
+        return row[0]
+
+
+    one_hour_ago = get_now_time() - 60*60
+
+    # === Mostly used by web-browser for debugging or the curious ===
+
+    # Checking that the user has ever collected data.
     with sqlite3.connect(current_db) as c:
-        userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (person,)).fetchone()
+        userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (user,)).fetchone()
 
     if(not userExistsCheck[0]):
         return "User has not collected any data."
 
-    if not get_request.includes(type):
-        return "Invalid data type was given."
-    
-    if type == get_request.destination:
-        return "????" # a week 4 issue
+    # Checking that a valid GET request name was given
+    if not get_request.includes(GET_type):
+        return "Invalid request name."
 
-    if type == get_request.trail_map:
+    if GET_type == get_request.trail_table:
+
         with sqlite3.connect(current_db) as c:
-            rows = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? AND timing>? ORDER BY timing DESC;''', (person, one_hour_ago)).fetchall() # decreasing in time
+            allRows = c.execute('''SELECT * FROM loc_data WHERE user=? AND timing>?''', (user, one_hour_ago)).fetchall()
+
+        html_render = make_html_table(("User", "Latitude", "Longitude", "Distance Delta (m)", "Time Delta (s)", "Time (Unix)"), allRows)
+        
+        return html_render
+
+
+    elif GET_type == get_request.vel_tables: # for now, showing the latest 1 hour
+        with sqlite3.connect(current_db) as c:
+            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (user, one_hour_ago)).fetchall()
+
+        html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time Delta (s)", "Distance Delta (m)", "Time (Unix)"), allRows)
+        
+        return html_render
+
+    # === Mostly used in JS code ===
+
+    elif GET_type == get_request.trail_json:
+        with sqlite3.connect(current_db) as c:
+            rows = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? AND timing>? ORDER BY timing DESC;''', (user, one_hour_ago)).fetchall() # decreasing in time
 
             output: Dict[str, Any] = {"locations": [], "timing": []}
             for row in rows:
@@ -131,30 +162,9 @@ def data(type: str, person: str) -> str:
 
             return json.dumps(output)
 
-    if type == get_request.trail_table:
-
+    elif GET_type == get_request.vel_json:
         with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM loc_data WHERE user=? AND timing>?''', (person, one_hour_ago)).fetchall()
-
-        html_render = make_html_table(("User", "Latitude", "Longitude", "Distance Delta (m)", "Time Delta (s)", "Time (mm-dd-yy, hh:mm:ss)"), allRows)
-        
-        return html_render
-
-    if type == get_request.vel_tables: # for now, showing the latest 1 hour
-        with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (person, one_hour_ago)).fetchall()
-
-        html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time Delta (s)", "Distance Delta (m)", "Time (mm-dd-yy, hh:mm:ss)"), allRows)
-        
-        return html_render
-
-    if type == get_request.vel_graphs:
-
-        with sqlite3.connect(current_db) as c:
-            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing>? ORDER by timing ASC''', (person, one_hour_ago)).fetchall()
-
-        if(allRows==None):
-            return "No velocity data within the last hour for " + person
+            allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing>? ORDER by timing ASC''', (user, one_hour_ago)).fetchall()
 
         plot = figure(x_axis_label="Time (s)", y_axis_label="Velocity (m/s)", x_axis_type='datetime')
         
@@ -166,7 +176,7 @@ def data(type: str, person: str) -> str:
             consec_vel.append(float(row[1]))
             avg_vel.append(float(row[2]))
 
-            time_slice = datetime.strptime(row[3], time_format)
+            time_slice = make_datatime_object(row[3])
             time.append(time_slice)
 
         # Week 4: make the graph more colorful/visually pleasing
@@ -175,13 +185,17 @@ def data(type: str, person: str) -> str:
 
         return json.dumps(json_item(plot, "myplot"))
 
-    return "Error."
+    else:
+        return "Error."
+
+# ==
 
 def request_handler(request) -> str:
+    one_hour_ago: int = get_now_time() - 60*60
 
     with sqlite3.connect(current_db) as c:
-        c.execute('''CREATE TABLE IF NOT EXISTS loc_data (user text, lat real, lon real, dist_delta real, time_delta, timing timestamp)''') # dist_delta in meters
-        c.execute('''CREATE TABLE IF NOT EXISTS vel_data (user text, consec_vel real, avg_vel real, timing timestamp)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS loc_data (user text, lat real, lon real, dist_delta real, time_delta, timing int)''') # dist_delta in meters
+        c.execute('''CREATE TABLE IF NOT EXISTS vel_data (user text, consec_vel real, avg_vel real, timing int)''')
         c.execute('''CREATE TABLE IF NOT EXISTS all_users (user text)''')
 
     if request["method"] == "POST":
@@ -194,57 +208,63 @@ def request_handler(request) -> str:
             return "Error: Invalid POST body."
         
         with sqlite3.connect(current_db) as c:
-            c.execute('''INSERT into all_users VALUES (?)''', (user,))
 
-            loc_row = c.execute('''SELECT * FROM loc_data WHERE user=? ORDER BY timing DESC''', (user,)).fetchone()
+            user_exists = c.execute('''SELECT * FROM all_users WHERE user=?''', (user,)).fetchone()
+        
+            if user_exists==None: # this is needed if we're dealing with a new user
 
-            if loc_row==None: # this is needed if no prior inserts were made (only happens once in a user's lifetime), in order to have initial deltas of 0
+                c.execute('''INSERT into all_users VALUES (?)''', (user,)) # edit so that it inserts only if it doesnt exist already in the DB
                 c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, get_now_time() ))
             else:
 
-                lastTime = make_datatime_object(loc_row[5])
-                timeDelta = round((datetime.now() - lastTime).total_seconds(), timePrecision)
-                
-                lastCoord = (loc_row[1], loc_row[2])
-                nowCoord = (lat, lon)
-                distDelta = round(get_distance(nowCoord, lastCoord), distPrecision)
-            
-                c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, timeDelta, get_now_time()))
+                lat_lon_timing_latest = c.execute('''SELECT lat, lon, timing FROM loc_data WHERE user=? and timing>? ORDER BY timing DESC LIMIT 1''', (user,one_hour_ago)).fetchone()
+                oldest_time = c.execute('''SELECT timing FROM loc_data WHERE user=? AND timing > ? ORDER BY timing ASC LIMIT 1;''', (user, one_hour_ago)).fetchone()
+                dist_deltas = c.execute('''SELECT dist_delta FROM loc_data WHERE user=? AND timing>? ORDER BY timing DESC;''', (user, one_hour_ago)).fetchall()
 
-                dist_deltas = c.execute('''SELECT dist_delta FROM loc_data ORDER BY timing DESC;''').fetchall()
+                # this should happen once during the 2 hour session
+                if (lat_lon_timing_latest==None or oldest_time==None or len(dist_deltas)==0):
+                    c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, 0, 0, get_now_time() ))
 
-                latest_time = c.execute('''SELECT timing FROM loc_data ORDER BY timing ASC LIMIT 1;''').fetchone()
-                oldest_time = c.execute('''SELECT timing FROM loc_data ORDER BY timing DESC LIMIT 1;''').fetchone()
-                total_time: float = (make_datatime_object(latest_time[0]) - make_datatime_object(oldest_time[0])).total_seconds()
-
-                total_distance: float = 0
-                for dist in dist_deltas:
-                    total_distance += dist[0]
-             
-                avg_vel: float = total_distance/total_time
-                consec_vel: float
-                
-                if timeDelta==0:
-                    consec_vel = 0
                 else:
-                    consec_vel = distDelta/timeDelta
 
-                c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, get_now_time()))
+                    last_time = int(lat_lon_timing_latest[2])
+                    time_delta = get_now_time() - last_time
+                    
+                    last_coord = (lat_lon_timing_latest[0], lat_lon_timing_latest[1])
+                    new_coord = (lat, lon)
+                    distDelta = round(get_distance(new_coord, last_coord), distPrecision)
+                
+                    total_time: int = get_now_time()- oldest_time[0]
+
+                    total_distance: float = 0
+                    for dist in dist_deltas:
+                        total_distance += dist[0]
+
+                    avg_vel: float = total_distance/total_time
+                    consec_vel: float
+                    
+                    if time_delta==0:
+                        consec_vel = 0
+                    else:
+                        consec_vel = distDelta/time_delta
+
+                    c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, time_delta, get_now_time()))
+                    c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, get_now_time()))
 
         return "Succesfully POSTed location data."
 
 
-    if request["method"] == "GET":
+    elif request["method"] == "GET":
         if(len(request["values"].keys())>0):
         
             requestType = list(request["values"].keys())[0] # getting the name of the type that interested, there might be a better way to do this !!!!!!!!!!!!!!!!!1
 
             try:
-                person = request["values"][requestType]
+                user = request["values"][requestType]
             except:
                 return "Missing parameter's value."
 
-            return data(requestType, person)
+            return get_data(requestType, user)
 
         else:
             return "Missing a parameter."
