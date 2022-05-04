@@ -50,6 +50,64 @@ def request_handler(request):
     # return lmao
     # current = things[0][0]
     current = None
+    now = datetime.datetime.now()
+    conn = sqlite3.connect(example_db)
+    c = conn.cursor()
+    plot2 = figure()
+    plot3 = figure()
+    plot4 = figure()
+    x = []
+    pressure = []
+    temperature = []
+    altitude = []
+    steps = []
+    stepsx = []
+    # for i in range(len(USERS)):
+    print("New User")
+    # things = c.execute('''SELECT pres, alt, temp, timing FROM sk_table WHERE user = ? ORDER by timing ASC;''',(USERS[i],)).fetchall()
+    things = c.execute('''SELECT pres, alt, temp, timing FROM sk_table WHERE user = ? ORDER by timing DESC LIMIT 1000;''', (current,)).fetchall()
+    print(things)
+    for row in things:
+        # print(row)
+        if row[0] is None or row[1] is None or row[2] is None or row[3] is None:
+            raise Exception(f"{row = }")
+        pressure.append(float(row[0]))
+        temperature.append(float(row[2]))
+        altitude.append(float(row[1]))
+        dto = datetime.datetime.strptime(row[3],'%Y-%m-%d %H:%M:%S.%f')
+        x.append(dto)
+    # print("pressure: ", pressure)
+    # print("temperature: ", temperature)
+    # print("x: ", x)
+    nconn = sqlite3.connect(steps_db)
+    nc = nconn.cursor()
+    stepThing = nc.execute('''SELECT steps, timing FROM steps_table WHERE user = ? ORDER by timing DESC LIMIT 1000;''', (current,)).fetchall()
+    for row in stepThing:
+        if row[0] is None:
+            raise Exception(f"{row = }")
+        steps.append(float(row[0]))
+        dto = datetime.datetime.strptime(row[1],'%Y-%m-%d %H:%M:%S.%f')
+        print("dto: ", dto)
+        stepsx.append(dto)
+    plot2.xaxis.axis_label = "time (sec)"
+    plot3.xaxis.axis_label = "time (sec)"
+    plot4.xaxis.axis_label = "time (sec)"
+    plot2.yaxis.axis_label = "altitude (m)"
+    plot3.yaxis.axis_label = "temperature (F)"
+    plot4.yaxis.axis_label = "steps"
+    plot1.line(x, pressure, legend_label="pressure", line_dash=[4, 4], line_color="orange", line_width=2)
+    plot2.line(x, altitude, legend_label="altitude", line_dash=[4, 4], line_color="green", line_width=2)
+    plot3.line(x, temperature, legend_label="temperature", line_dash=[4, 4], line_color="blue", line_width=2)
+    plot4.line(stepsx, steps, legend_label="steps", line_dash=[4, 4], line_color="blue", line_width=2)
+
+    conn.commit()
+    conn.close()
+    nconn.commit()
+    nconn.close()
+
+    script2, div2 = components(plot2)
+    script3, div3 = components(plot3)
+    script4, div4 = components(plot4)
     if request['method'] =="GET":
         if('user' not in request['values']):
             # return "you goofed"
@@ -58,94 +116,28 @@ def request_handler(request):
         if(current == ''):
             # return "stop goofing"
             return redirectpage
-        now = datetime.datetime.now()
-        conn = sqlite3.connect(example_db)
-        c = conn.cursor()
-        plot1 = figure()
-        plot2 = figure()
-        plot3 = figure()
-        plot4 = figure()
-        x = []
-        pressure = []
-        temperature = []
-        altitude = []
-        steps = []
-        stepsx = []
-        # for i in range(len(USERS)):
-        print("New User")
-        # things = c.execute('''SELECT pres, alt, temp, timing FROM sk_table WHERE user = ? ORDER by timing ASC;''',(USERS[i],)).fetchall()
-        things = c.execute('''SELECT pres, alt, temp, timing FROM sk_table WHERE user = ? ORDER by timing DESC LIMIT 1000;''', (current,)).fetchall()
-        print(things)
-        for row in things:
-            # print(row)
-            if row[0] is None or row[1] is None or row[2] is None or row[3] is None:
-                raise Exception(f"{row = }")
-            pressure.append(float(row[0]))
-            temperature.append(float(row[2]))
-            altitude.append(float(row[1]))
-            dto = datetime.datetime.strptime(row[3],'%Y-%m-%d %H:%M:%S.%f')
-            x.append(dto)
-        # print("pressure: ", pressure)
-        # print("temperature: ", temperature)
-        # print("x: ", x)
-        nconn = sqlite3.connect(steps_db)
-        nc = nconn.cursor()
-        stepThing = nc.execute('''SELECT steps, timing FROM steps_table WHERE user = ? ORDER by timing DESC LIMIT 1000;''', (current,)).fetchall()
-        for row in stepThing:
-            if row[0] is None:
-                raise Exception(f"{row = }")
-            steps.append(float(row[0]))
-            dto = datetime.datetime.strptime(row[1],'%Y-%m-%d %H:%M:%S.%f')
-            print("dto: ", dto)
-            stepsx.append(dto)
-        plot1.xaxis.axis_label = "time (sec)"
-        plot2.xaxis.axis_label = "time (sec)"
-        plot3.xaxis.axis_label = "time (sec)"
-        plot4.xaxis.axis_label = "time (sec)"
-        plot1.yaxis.axis_label = "pressure (Pa)"
-        plot2.yaxis.axis_label = "altitude (m)"
-        plot3.yaxis.axis_label = "temperature (F)"
-        plot4.yaxis.axis_label = "steps"
-        plot1.line(x, pressure, legend_label="pressure", line_dash=[4, 4], line_color="orange", line_width=2)
-        plot2.line(x, altitude, legend_label="altitude", line_dash=[4, 4], line_color="green", line_width=2)
-        plot3.line(x, temperature, legend_label="temperature", line_dash=[4, 4], line_color="blue", line_width=2)
-        plot4.line(stepsx, steps, legend_label="steps", line_dash=[4, 4], line_color="blue", line_width=2)
+        return '''<!DOCTYPE html>
+        <html>
+        <body>
 
-        conn.commit()
-        conn.close()
-        nconn.commit()
-        nconn.close()
-        #either show plot1 or plot2
-        # show(plot1)
-        # show(plot2)
-        script1, div1 = components(plot1)
-        script2, div2 = components(plot2)
-        script3, div3 = components(plot3)
-        script4, div4 = components(plot4)
-        return f'''<!DOCTYPE html>
-        <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
-        <body>
-            {div1}
-        </body>
-            {script1}
-        <body>
-            {div2}
-        </body>
-            {script2}
-        <body>
-            {div3}
-        </body>
-            {script3}
-        <body>
-            {div4}
-        </body>
-            {script4}
-        <br>
-        <form action="http://608dev-2.net/sandbox/sc/team44/plots.py?user={current}" method="post">
-        <input type="submit">
+        <h1>Pick your plot...</h1>
+        <p>Boost your way to success</p>
+        <form action="http://608dev-2.net/sandbox/sc/team44/walyw2demo.py" method="post">   
+          <label for="plot">I want to see my...</label>
+<select name="plot" id="plot">
+ <option value="Velocity">Velocity</option>
+ <option value="Altitude">Altitude</option>
+ <option value="Step Count">Step Count</option>
+ <option value="Temperature">Temperature</option>
+</select>
+<br>
+<br>
+    <input type="submit">
         </form>
+        </body>
         </html>
-        '''
+'''
+        
         #return some HTTP with graphs here!
     else:
         # create_login_database()
@@ -154,4 +146,140 @@ def request_handler(request):
         # c.execute('''INSERT into login_table VALUES (?,?,?);''',(current, datetime.datetime.now(), 0))
         # conn.commit()
         # conn.close()
-        return redirectpage
+        
+        choice = request["form"]["plot"]
+          
+        if choice == "Velocity":
+            return f'''<!DOCTYPE html>
+              <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
+              <body>
+
+                    <h1>Pick your plot...</h1>
+                    <p>Boost your way to success</p>
+                    <form action="http://608dev-2.net/sandbox/sc/team44/walyw2demo.py" method="post">   
+                      <label for="plot">I want to see my...</label>
+            <select name="plot" id="plot">
+          <option value="Velocity">Velocity</option>
+          <option value="Altitude">Altitude</option>
+          <option value="Step Count">Step Count</option>
+          <option value="Temperature">Temperature</option>
+            </select>
+            <br>
+            <br>
+                      
+                      <input type="submit">
+                    </form>
+<br>
+<p>Current Plot: {choice}</p>
+                    </body>
+                    
+                <body>
+  <div id="myplot"></div>
+
+  <script>
+    const mainUrl="http://608dev-2.net/sandbox/sc/team44/map/main.py?velocity-json="+USERNAME;
+
+  fetch(mainUrl)
+    .then(function(response) { return response.json(); })
+    .then(function(item) { return Bokeh.embed.embed_item(item); })
+  </script>
+</body>
+   
+              </html>
+              ''' 
+        elif choice == "Altitude":
+            return f'''<!DOCTYPE html>
+              <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
+              <body>
+
+                    <h1>Pick your plot...</h1>
+                    <p>Boost your way to success</p>
+                    <form action="http://608dev-2.net/sandbox/sc/team44/walyw2demo.py" method="post">   
+                      <label for="plot">I want to see my...</label>
+            <select name="plot" id="plot">
+     <option value="Velocity">Velocity</option>
+     <option value="Altitude">Altitude</option>
+     <option value="Step Count">Step Count</option>
+     <option value="Temperature">Temperature</option>
+            </select>
+            <br>
+            <br>
+                      
+                      <input type="submit">
+                    </form>
+
+<br>
+<p>Current Plot: {choice}</p>
+                    </body>
+
+    
+              <body>
+                  {div2}
+              </body>
+                  {script2}
+     
+              </html>
+              ''' 
+        elif choice == "Step Count":
+            return f'''<!DOCTYPE html>
+              <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
+              <body>
+
+                    <h1>Pick your plot...</h1>
+                    <p>Boost your way to success</p>
+                    <form action="http://608dev-2.net/sandbox/sc/team44/walyw2demo.py" method="post">   
+                      <label for="plot">I want to see my...</label>
+            <select name="plot" id="plot">
+     <option value="Velocity">Velocity</option>
+     <option value="Altitude">Altitude</option>
+     <option value="Step Count">Step Count</option>
+     <option value="Temperature">Temperature</option>
+            </select>
+            <br>
+            <br>
+                      
+                      <input type="submit">
+                    </form>
+
+<br>
+<p>Current Plot: {choice}</p>
+                    </body>
+
+    
+              <body>
+                  {div2}
+              </body>
+                  {script2}
+     
+              </html>
+              ''' 
+        else:
+            return f'''<!DOCTYPE html>
+              <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
+              <body>
+
+                    <h1>Pick your plot...</h1>
+                    <p>Boost your way to success</p>
+                    <form action="http://608dev-2.net/sandbox/sc/team44/walyw2demo.py" method="post">   
+                      <label for="plot">I want to see my...</label>
+            <select name="plot" id="plot">
+      <option value="Velocity">Velocity</option>
+      <option value="Altitude">Altitude</option>
+      <option value="Step Count">Step Count</option>
+      <option value="Temperature">Temperature</option>
+            </select>
+            <br>
+            <br>
+                      
+                      <input type="submit">
+                    </form>
+<br>
+<p>Current Plot: {choice}</p>
+                    </body>
+
+              <body>
+                  {div3}
+              </body>
+                  {script3}
+              </html>
+              ''' 
