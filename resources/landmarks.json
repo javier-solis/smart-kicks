@@ -23,6 +23,13 @@
         },
 
         {
+            "name": "Green Building",
+            "latitude": 42.3603088,
+            "longitude": -71.0915035,
+            "description": "The Green Building (which isn't actually green!) is really shorthand for the Cecil and Ida Green Building. It's an academic building which concluded construction in 1964, is home to MIT's Department of Earth, Atmospheric, and Planetary Sciences (EAPS). It also happens to be one of Cambridge's tallest buildings."
+        },
+
+        {
             "name": "Fairchild Building",
             "latitude": 42.3612937,
             "longitude": -71.0942495,
