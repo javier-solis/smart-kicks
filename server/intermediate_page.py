@@ -19,11 +19,15 @@ from bokeh.embed import components
 def request_handler(request):
     redirectpage = '''<!DOCTYPE html>
                 <html>
+                
                 <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44/login_w3.py" />
-                </html>
+
                 <script>
                 document.cookie = "";
                 </script>
+
+                </html>
+                
             '''
     if(request['method'] == 'GET'):
         if('user' not in request['values']):
@@ -47,19 +51,26 @@ def request_handler(request):
         if('plots' in request['form'] and 'user' in request['form']):
             redirectpage = '''<!DOCTYPE html>
                 <html>
+
                 <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44/plots.py?user={}" />
-                </html>
                 <script>
-                document.cookie = "";
+                    document.cookie = "";
                 </script>
+
+                </html>
+                
             '''.format(request['form']['user'])
         elif('maps' in request['form'] and 'user' in request['form']):
             redirectpage = '''<!DOCTYPE html>
                 <html>
+
                 <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44//map/index.html?user={}" />
-                </html>
+
                 <script>
                 document.cookie = "";
                 </script>
+
+                </html>
+                
             '''.format(request['form']['user'])
         return redirectpage
