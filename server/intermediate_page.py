@@ -20,7 +20,7 @@ def request_handler(request):
     redirectpage = '''<!DOCTYPE html>
                 <html>
 
-                <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44/login_w3.py" />
+                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/login_w3.py" />
 
                 <script>
                 document.cookie = "";
@@ -52,7 +52,7 @@ def request_handler(request):
             redirectpage = '''<!DOCTYPE html>
                 <html>
 
-                <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44/plots.py?user={}" />
+                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/plots.py?user={}" />
                 <script>
                     document.cookie = "";
                 </script>
@@ -64,7 +64,7 @@ def request_handler(request):
             redirectpage = '''<!DOCTYPE html>
                 <html>
 
-                <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44//map/index.html?user={}" />
+                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44//map/index.html?user={}" />
 
                 <script>
                     document.cookie = "";
