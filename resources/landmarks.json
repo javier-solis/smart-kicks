@@ -1,0 +1,25 @@
+{
+    "landmarks": [
+        {
+            "name": "Alchemist",
+            "latitude": 42.351506,
+            "longitude": -71.1354657,
+            "description": "This is an art installation made by Jaume Plensa in 2010. The piece was designed to emphasize 'thinking and calculation'. It sits near the Stratton Student Center and is across the street from Lobby 7."
+        },
+
+        {
+            "name": "Northwest Passage",
+            "latitude": 42.3601335,
+            "longitude": -71.0920894,
+            "description": "Northwest Passage is an installation made by Olafur Eliasson in 2018. The passage consists of ringed lights that guide one into the newly built MIT.nano building."
+        },
+
+        {
+            "name": "Green Building",
+            "latitude": 42.3603088,
+            "longitude": -71.0915035,
+            "description": "The Cecil and Ida Green Building, an academic building which concluded construction in 1964, is home to MIT's Department of Earth, Atmospheric, and Planetary Sciences (EAPS). It also happens to be one of Cambridge's tallest buildings."
+        }
+
+    ]
+}
