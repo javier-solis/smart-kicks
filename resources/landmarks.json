@@ -19,6 +19,13 @@
             "latitude": 42.3603088,
             "longitude": -71.0915035,
             "description": "The Cecil and Ida Green Building, an academic building which concluded construction in 1964, is home to MIT's Department of Earth, Atmospheric, and Planetary Sciences (EAPS). It also happens to be one of Cambridge's tallest buildings."
+        },
+
+        {
+            "name": "Lobby 7",
+            "latitude": 42.3591656,
+            "longitude": -71.0954187,
+            "description": "Lobby 7, the main entrance lobby to the Massachusetts Institute of Technology, is the gateway through which many MIT buildings can be accessed."
         }
 
     ]
