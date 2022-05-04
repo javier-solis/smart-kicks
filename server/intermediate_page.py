@@ -19,7 +19,7 @@ from bokeh.embed import components
 def request_handler(request):
     redirectpage = '''<!DOCTYPE html>
                 <html>
-                
+
                 <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44/login_w3.py" />
 
                 <script>
@@ -67,7 +67,7 @@ def request_handler(request):
                 <meta http-equiv="refresh" content="0; URL=https://608dev-2.net/sandbox/sc/team44//map/index.html?user={}" />
 
                 <script>
-                document.cookie = "";
+                    document.cookie = "";
                 </script>
 
                 </html>
