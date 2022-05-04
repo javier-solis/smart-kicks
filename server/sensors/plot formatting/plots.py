@@ -16,12 +16,12 @@ redirectpage = '''<!DOCTYPE html>
                 document.cookie = "";
                 </script>
             '''
-def create_login_database():
-   conn = sqlite3.connect(login_db)  # connect to that database (will create if it doesn't already exist)
-   c = conn.cursor()  # move cursor into database (allows us to execute commands)
-   c.execute('''CREATE TABLE IF NOT EXISTS login_table (user text, timing timestamp, isLoggedIn int);''') # run a CREATE TABLE command
-   conn.commit() # commit commands (VERY IMPORTANT!!)
-   conn.close() # 
+# def create_login_database():
+#    conn = sqlite3.connect(login_db)  # connect to that database (will create if it doesn't already exist)
+#    c = conn.cursor()  # move cursor into database (allows us to execute commands)
+#    c.execute('''CREATE TABLE IF NOT EXISTS login_table (user text, timing timestamp, isLoggedIn int);''') # run a CREATE TABLE command
+#    conn.commit() # commit commands (VERY IMPORTANT!!)
+#    conn.close() # 
 
 def create_steps_database():
    conn = sqlite3.connect(steps_db)  # connect to that database (will create if it doesn't already exist)

@@ -22,7 +22,7 @@ loginpage = '''<!DOCTYPE html>
                 </head>
                 <h1>Sign in!</h1>
                 <p>Enter your username. Then, we'll show your stats :)</p>
-                <form onsubmit="(e) => setCookie(e)" action="http://608dev-2.net/sandbox/sc/team44/plots.py" method="get">   
+                <form onsubmit="(e) => setCookie(e)" action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py" method="get">   
                 <label for="user">Username:</label>
                 <input type="text" id="user" name="user" />
                 </form>
@@ -116,7 +116,7 @@ def request_handler(request):
             return loginpage
         redirectpage = '''<!DOCTYPE html>
                 <html>
-                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/plots.py?user={}" />
+                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/intermediate_page.py?user={}" />
                 </html>
                 <span>reached here!</span>
             '''.format(cookiename)
