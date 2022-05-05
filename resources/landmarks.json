@@ -2,36 +2,36 @@
         
     {
         "name": "Lobby 7",
-        "latitude": 42.3591656,
-        "longitude": -71.0954187,
+        "lat": 42.3591656,
+        "lon": -71.0954187,
         "description": "Lobby 7, the main entrance lobby to the Massachusetts Institute of Technology, is the gateway through which many MIT buildings can be accessed."
     },
     
     {
         "name": "Alchemist",
-        "latitude": 42.351506,
-        "longitude": -71.1354657,
+        "lat": 42.351506,
+        "lon": -71.1354657,
         "description": "This is an art installation made by Jaume Plensa in 2010. The piece was designed to emphasize 'thinking and calculation'. It sits near the Stratton Student Center and is across the street from Lobby 7."
     },
 
     {
         "name": "Northwest Passage",
-        "latitude": 42.3601335,
-        "longitude": -71.0920894,
+        "lat": 42.3601335,
+        "lon": -71.0920894,
         "description": "Northwest Passage is an installation made by Olafur Eliasson in 2018. The passage consists of ringed lights that guide one into the newly built MIT.nano building."
     },
 
     {
         "name": "Green Building",
-        "latitude": 42.3603088,
-        "longitude": -71.0915035,
+        "lat": 42.3603088,
+        "lon": -71.0915035,
         "description": "The Green Building (which isn't actually green!) is really shorthand for the Cecil and Ida Green Building. It's an academic building which concluded construction in 1964 and is home to MIT's Department of Earth, Atmospheric, and Planetary Sciences (EAPS). It also happens to be one of Cambridge's tallest buildings."
     },
 
     {
         "name": "Fairchild Building",
-        "latitude": 42.3612937,
-        "longitude": -71.0942495,
+        "lat": 42.3612937,
+        "lon": -71.0942495,
         "description": "The Fairchild Building, also known by its number as Building 38, is home to many segments of the EECS department at MIT. The 6.08 Lab is also inside of it!"
     }
 
