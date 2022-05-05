@@ -1,80 +1,48 @@
+// === All Imports ===
 #include <SPI.h>
 #include <WiFiClientSecure.h>
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
-#include <string.h> //this is the line of code you are missing
+#include <string.h>
 #include "ButtonClass.h"
 #include "LedControl.h"
 #include "binary.h"
-
-// LED Matrix Decleration and Variables and helper functions
-LedControl lc = LedControl(35,36,15,1); 
-
-byte center_bitmap[8]= {B00000000,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B00000000};
-byte offValue = B00000000;
+#include "MatrixFunctions.h"
 
 
-int blink_time = 500;
-int blink_timer=0;
+// === Time Variables ===
+// Note, these are all represented by their millisecond value, unless otherwise specified
 
-void center_on(){
-  for(int row=0; row<8; row++){
-      lc.setRow(0,row, center_bitmap[row]);
-  }
-}
+const int ONE_SEC= 1000;
 
-void clear_screen(){
-  for(int row=0; row<8; row++){
-      lc.setRow(0,row, offValue);
-  }
-}
+// === LED Matrix: Initiation, Variables, and Helper Functions ===
 
+//(Moved, happens in MatrixFunctions.h)
 
-byte load_inner_left = B00010000;
-byte load_inner_right = B00001000;
+// === System Variables ===
 
-int load_state = 0;
-void loading(){
-  clear_screen();
-  if(millis()-blink_timer>=blink_time){
-    switch(load_state){
-      case 0:
-        lc.setRow(0, 2, load_inner_left);
-      break;
-      case 1:
-        lc.setRow(0, 2, load_inner_right);
-      break;
-      case 2:
-        lc.setRow(0, 3, load_inner_left);
-      break;
-      case 3:
-        lc.setRow(0, 3, load_inner_right);
-      load_state=-1; // offset for the ++ later
-      break;
-    }
-    load_state++;
-    blink_timer=millis();
-  }
-}
-
-
-// Global Variables:
-
-const int LOOP_PERIOD = 5; // how often the void loop() should refresh, in ms
+const int LOOP_PERIOD = 5; // in ms
 uint32_t primary_timer=0;
 
-const int PING = 10*1000; // how often the pingLocation should refresh (every 10 sec)
-uint32_t ping_timer=0;
+ // (how often data should be collected and uploaded)
+const int PING = 10*ONE_SEC;
+uint32_t ping_timer = 0;
 
-char mainUser[60];
-int n = sprintf(mainUser, "test1"); // i dont think this is needed but without it there's an error
+char main_user[60];
+const int main_user_n = sprintf(main_user, "test1"); //  <------------------------------- USER MUST EDIT THIS!!!!!!
 
 bool powered_off = true;
 
-// Button Stuff
+// === Button Initiation and Variables ===
 
-int BUTTON = 45;
-Button power_button(BUTTON);
+int BUTTON_NUM = 45;
+Button power_button(BUTTON_NUM);
+
+
+// === Variables For Landmark Getting ===
+int landmark_lat = 0;
+int landmark_lon = 0;
+
 
 // === WiFi Variables ===
 const uint16_t RESPONSE_TIMEOUT = 6000;
@@ -87,28 +55,40 @@ char request_mit[IN_BUFFER_SIZE];
 char response_mit[OUT_BUFFER_SIZE];
 char json_body[JSON_BODY_SIZE];
 
-/* CONSTANTS */
-//Prefix to POST request:
-const char PREFIX[] = "{\"wifiAccessPoints\": ["; //beginning of json body
-const char SUFFIX[] = "]}"; //suffix to POST request
-const char API_KEY[] = "AIzaSyAQ9SzqkHhV-Gjv-71LohsypXUH447GWX8"; //don't change this and don't share this
-
-const int MAX_APS = 5;
-
-/* Global variables*/
 WiFiClientSecure client; //global WiFiClient Secure object
 WiFiClient client2; //global WiFiClient Secure object
 
 
+
+// === Variables For Geolocation Building ===
+
+// Prefix to POST request:
+const char PREFIX[] = "{\"wifiAccessPoints\": ["; //beginning of json body
+const char SUFFIX[] = "]}"; //suffix to POST request
+const char API_KEY[] = "AIzaSyAQ9SzqkHhV-Gjv-71LohsypXUH447GWX8"; //Google API key from 6.08 Staff
+
+const int MAX_APS = 10; // max number of access points to collect
+
+char* SERVER = "googleapis.com";  // Server URL
+
+
+
+// === WiFi Credentials ===
+
+// On Campus:
 // const char NETWORK[] = "MIT GUEST";
 // const char PASSWORD[] = "";
 
 // const char NETWORK[] = "608_24G";
 // const char PASSWORD[] = "608g2020";
 
-// using a hotspot here...
+// Hotspot:                                    //  <------------------------------- USER MUST EDIT THIS!!!!!!
 const char NETWORK[] = "SLP-F9FD71W0LMX0";
 const char PASSWORD[] = "bqd1nuuv3nd8d";
+
+
+
+// === WiFi Extras ===
 
 /* Having network issues since there are 50 MIT and MIT_GUEST networks?. Do the following:
     When the access points are printed out at the start, find a particularly strong one that you're targeting.
@@ -139,7 +119,7 @@ byte bssid[] = {0xD4, 0x20, 0xB0, 0xCC, 0xDF, 0x44}; //6 byte MAC address of AP 
     * `uint8_t* mac_address`: a pointer to the six long array of `uint8_t` values that specifies the MAC address for the access point in question.
 
       Return value:
-      the length of the object built. If not entry is written, 
+      the length of the object built. If not entry is written,
 */
 int wifi_object_builder(char* object_string, uint32_t os_len, uint8_t channel, int signal_strength, uint8_t* mac_address) {
   char temp[300];//300 likely long enough for one wifi entry
@@ -154,13 +134,17 @@ int wifi_object_builder(char* object_string, uint32_t os_len, uint8_t channel, i
 }
 
 
-char* SERVER = "googleapis.com";  // Server URL
+// ======
 
+/**
+ *Used to get your current location.
+ */
 void pingLocation() {
+
   int offset = sprintf(json_body, "%s", PREFIX);
-  int n = WiFi.scanNetworks(); //run a new scan. could also modify to use original scan from setup so quicker (though older info)
+  int n = WiFi.scanNetworks(); //run a new scan
   Serial.println("scan done");
-  if (n == 0) {
+  if (n == 0) { // this should never happen, maybe a differenth thing has to happen or else below code will crash
     Serial.println("no networks found");
   } else {
     int max_aps = max(min(MAX_APS, n), 1);
@@ -173,13 +157,13 @@ void pingLocation() {
     }
 
     sprintf(json_body + offset, "%s", SUFFIX);
-    
+
     int len = strlen(json_body);
 
     request[0] = '\0';
     response[0] = '\0';
-    // Make a HTTP request:
-    Serial.println("GETing geolocation");
+    // Make a HTTPS request:
+    Serial.println("GET geolocation");
     request[0] = '\0'; //set 0th byte to null
     offset = 0; //reset offset variable for sprintf-ing
     offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
@@ -188,8 +172,13 @@ void pingLocation() {
     offset += sprintf(request + offset, "cache-control: no-cache\r\n");
     offset += sprintf(request + offset, "Content-Length: %d\r\n\r\n", len);
     offset += sprintf(request + offset, "%s\r\n", json_body);
-    do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
-    Serial.println("finished GETing geolocation");
+    bool succeed = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
+    Serial.println("finished GET of geolocation");
+
+
+    while(!succeed){ // also add a check to wait every 4 seconds before sending out again
+      succeed = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
+    }
 
     char* start = strchr(response,'{');
     char* end = strrchr(response,'}');
@@ -209,7 +198,7 @@ void pingLocation() {
     // Make a POST request:
 
     char json_body[300]; // Should be plenty
-    sprintf(json_body, "user=%s&lat=%f&lon=%f", mainUser, latitude, longitude);
+    sprintf(json_body, "user=%s&lat=%f&lon=%f", main_user, latitude, longitude);
 
     char buffer[1000];
     int n = sprintf(buffer, "POSTing this to our server: %s", json_body);
@@ -232,21 +221,41 @@ void pingLocation() {
 }
 
 
+/**
+* Get the last landmark that the user selected on the website.
+* Returns an array of floats: [lat, lon].
+*/
+void getLandmarkLatLon(){
+  request[0] = '\0';
+  response[0] = '\0';
+  int offset = 0;
+
+  // TODO, finalize URL and stuff:
+
+  // offset += sprintf(request + offset, "GET https://608dev-2.net/sandbox/sc/team44/map/landmarks.py?getLandmark=%s HTTP/1.1\r\n", main_user);
+  // offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
+  // offset += sprintf(request + offset, "\r\n");
+  // do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
+
+  // TODO: now with this response, do some delimiter stuff to get the actual lat and lon numbers
+
+  landmark_lat = 0;
+  landmark_lon = 0;
+
+}
+
+
 void setup() {
   Serial.begin(115200);
 
-  // For LED matrix:
-  lc.shutdown(0,false);
-  // Set brightness to a medium value
-  lc.setIntensity(0,8);
-  // Clear the display
-  lc.clearDisplay(0);  
+  initialize_matrix();
 
-  pinMode(BUTTON, INPUT_PULLUP);
+  pinMode(BUTTON_NUM, INPUT_PULLUP);
 
   delay(100); //wait a bit (100 ms)
 
   //PRINT OUT WIFI NETWORKS NEARBY
+  // TODO this may be removed ?????? Not entirely sure if the next part uses it
   int n = WiFi.scanNetworks();
   Serial.println("scan done");
   if (n == 0) {
@@ -267,6 +276,7 @@ void setup() {
   }
   delay(500); //wait a bit (100 ms)
 
+
   //if using regular connection use line below:
   WiFi.begin(NETWORK, PASSWORD);
   //if using channel/mac specification for crowded bands use the following:
@@ -275,40 +285,33 @@ void setup() {
   uint8_t count = 0; //count used for Wifi check times
   Serial.print("Attempting to connect to ");
   Serial.println(NETWORK);
-  while (WiFi.status() != WL_CONNECTED && count < 10) {
-    loading();
-    delay(1000);
+  while (WiFi.status() != WL_CONNECTED && count < 100) {
+    throbber_animation();
+    delay(100);
     Serial.print(".");
+    if(count%10==0){
+      Serial.print("\n");
+    }
     count++;
   }
-  
+
   delay(2000);
 
   if (WiFi.isConnected()) { //if we connected then print our IP, Mac, and SSID we're on
     Serial.println("CONNECTED!");
-    Serial.printf("%d:%d:%d:%d (%s) (%s)\n", WiFi.localIP()[3], WiFi.localIP()[2],
-                  WiFi.localIP()[1], WiFi.localIP()[0],
-                  WiFi.macAddress().c_str() , WiFi.SSID().c_str());
+    // Serial.printf("%d:%d:%d:%d (%s) (%s)\n", WiFi.localIP()[3], WiFi.localIP()[2],
+    //               WiFi.localIP()[1], WiFi.localIP()[0],
+    //               WiFi.macAddress().c_str() , WiFi.SSID().c_str());
     delay(500);
   } else { //if we failed to connect just Try again.
-    Serial.println("Failed to Connect :/  Going to restart");
+    setup();
+    Serial.println("Failed to Connect. Going to restart.");
     Serial.println(WiFi.status());
     ESP.restart(); // restart the ESP (proper way)
   }
 
-  
+
   Serial.println("Powered off");
-
-}
-
-void blinking(){
-  if(millis()-blink_timer>blink_time*2){
-    center_on();
-    blink_timer=millis();
-  }
-  else if(millis() - blink_timer >blink_time){
-    clear_screen();
-  }
 
 }
 
@@ -318,15 +321,16 @@ bool on_off_check(){
 
   if(powered_off){
 
-    blinking();
+    blinking_center_animation();
 
     if(curr_state==1){
       powered_off=false;
-      center_on();
+      show_center();
+
+      getLandmarkLatLon();
 
       Serial.println("Powered on");
     }
-    // trying out some light sleep here?????
     return true;
   }
 
@@ -339,13 +343,18 @@ bool on_off_check(){
 
 
 void loop() {
+
+  if(WiFi.status() != WL_CONNECTED){
+    powered_off=true;
+  }
+
   // check that wifi is still connected
   // if not, go into wifi search mode without crashing
 
-  if off_check(){
+  if (on_off_check()){
     return;
   }
-  
+
 
 
   if (millis() - ping_timer > PING){
@@ -353,15 +362,21 @@ void loop() {
 
     // sensor readings go in here
 
+
+
+
+
+
     // other get and posts go here
+
+
+
 
     pingLocation();
 
+    ping_timer = millis();
+  }
 
-    
-    ping_timer=millis();
-  } 
-    
 
 
 
