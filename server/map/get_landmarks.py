@@ -1,6 +1,6 @@
 import json
 
-landmarks_file = '/var/jail/home/team44/server/map/landmarks.json'
+landmarks_file = '/var/jail/home/team44/map/landmarks.json'
 
 def request_handler(request):
     if request["method"] == "GET":

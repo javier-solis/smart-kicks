@@ -384,6 +384,8 @@ double get_azimuth(Coord current_location, Coord destination) {
 void setup() {
   Serial.begin(115200);
 
+  setup_imu();
+
   initialize_matrix();
 
   pinMode(BUTTON_NUM, INPUT_PULLUP);
@@ -452,14 +454,14 @@ void setup() {
 
   // Calibration steps
 
-  // Serial.printf("Compass calibration will begin in 3s\r\n");
-  // delay(3000);
+  Serial.printf("Compass calibration will begin in 3s\r\n");
+  delay(3000);
 
-  // Serial.printf("Calibrating: spin system in 360deg motions for 15s\r\n");
+  Serial.printf("Calibrating: spin system in 360deg motions for 15s\r\n");
 
-  // compass.calibrate(); //Calibrate for a set # of milliseconds
+  compass.calibrate(); //Calibrate for a set # of milliseconds
 
-  // Serial.printf("Compass is calibrated\r\n");
+  Serial.printf("Compass is calibrated\r\n");
 
   filter.set(update_compass());
 
@@ -491,7 +493,7 @@ void loop() {
     
     Serial.printf("2\r\n");
 
-    Serial.printf("Destination: %f,%f\r\n", destination.lat, destination.lon);
+    Serial.printf("Destination: %f, %f\r\n", destination.lat, destination.lon);
 
     Coord current_location = getLocation();
 
@@ -545,6 +547,9 @@ void loop() {
 float update_compass() {
   compass.update();
   float compass_heading = compass.heading;
+
+  Serial.printf("heading from compass: %f", compass_heading);
+
   float clockwise_heading = 360.0 - compass_heading;
   return clockwise_heading;
 }

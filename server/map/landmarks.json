@@ -5,6 +5,13 @@
         "lon": -71.09316160376488,
         "description": "Lobby 7, the main entrance lobby to the Massachusetts Institute of Technology, is the gateway through which many MIT buildings can be accessed."
     },
+
+    {
+        "name": "Lobby 10",
+        "lat": 42.35945141024759,
+        "lon": -71.09190296694244,
+        "description": "Insert description"
+    },
     
     {
         "name": "Alchemist",
