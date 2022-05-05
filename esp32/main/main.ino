@@ -163,7 +163,7 @@ float beta = 0.90; // 0 <= beta <= 1, increase to emphasize new values more
 float alpha = 1 - beta;
 IIR filter(alpha);
 
-double theta0 = -30;
+double theta0 = 0;
 
 
 Coord getLocation() {
@@ -519,7 +519,11 @@ void loop() {
 
     int actual_angle = angle_in_range(calc_angle);
 
-    Serial.printf("Angle: %d\r\n", actual_angle);
+    Serial.printf("Forward azimuth: %f\r\n", forward_azimuth);
+    Serial.printf("Heading: %f\r\n", heading);
+    Serial.printf("Filtered heading: %f\r\n", filtered_heading);
+    Serial.printf("Calc angle: %f\r\n", calc_angle);
+    Serial.printf("Final angle: %d\r\n", actual_angle);
 
     Serial.printf("9\r\n");
 
