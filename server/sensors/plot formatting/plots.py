@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 from bokeh.plotting import figure
+from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.embed import components
 #script is meant for local development and experimentation with bokeh
 example_db = "/var/jail/home/team44/skweek1.db" #database has table called sensor_data with entries: time_ timestamp, user text, temperature real, pressure real
@@ -100,6 +101,8 @@ def request_handler(request):
         plot2 = figure(x_axis_type='datetime', y_range = (0, 30))
         plot3 = figure(x_axis_type='datetime')
         plot4 = figure(x_axis_type='datetime')
+        for i in [plot2, plot3, plot4]:
+            i.xaxis.formatter = DatetimeTickFormatter(minsec = [':%M:%S'])
         x = []
         pressure = []
         temperature = []
@@ -118,7 +121,8 @@ def request_handler(request):
             pressure.append(float(row[0]))
             temperature.append(float(row[2]))
             altitude.append(float(row[1]))
-            dto = datetime.datetime.strptime(row[3],'%Y-%m-%d %H:%M:%S.%f')
+            # dto = datetime.datetime.strptime(row[3],'%Y-%m-%d %H:%M:%S.%f')
+            dto = datetime.datetime.strptime(row[3],':%M:%S.%f')
             x.append(dto)
         # print("pressure: ", pressure)
         # print("temperature: ", temperature)
@@ -130,7 +134,8 @@ def request_handler(request):
             if row[0] is None:
                 raise Exception(f"{row = }")
             steps.append(float(row[0]))
-            dto = datetime.datetime.strptime(row[1],'%Y-%m-%d %H:%M:%S.%f')
+            # dto = datetime.datetime.strptime(row[1],'%Y-%m-%d %H:%M:%S.%f')
+            dto = datetime.datetime.strptime(row[1],':%M:%S.%f')
             print("dto: ", dto)
             stepsx.append(dto)
         plot2.xaxis.axis_label = "time (sec)"
