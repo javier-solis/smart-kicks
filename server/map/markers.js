@@ -19,7 +19,7 @@ function onClick() {
         },
         body: `user=${username}&landmark_name=${landmarkName}`
       })
-      .then(res.text())
+      .then(res => res.text())
       .then(res => {
           console.log("Successful POSTed! Got back this message:", res);
       })

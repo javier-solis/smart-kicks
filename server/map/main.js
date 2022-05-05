@@ -45,7 +45,7 @@ function getJSONGroup(array, key, value) {
 // == Map Setup Stuff ==
 
 async function getLandmarks() {
-  return fetch('http://608dev-2.net/sandbox/sc/team44/landmarks.py')
+  return fetch('http://608dev-2.net/sandbox/sc/team44/get_landmarks.py')
   .then(res => res.json());
 }
 
