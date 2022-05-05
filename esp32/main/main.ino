@@ -163,7 +163,7 @@ float beta = 0.90; // 0 <= beta <= 1, increase to emphasize new values more
 float alpha = 1 - beta;
 IIR filter(alpha);
 
-double theta0 = 0;
+double theta0 = -45; // Offset to account for positioning of the magnetometer on the board, etc.
 
 
 Coord getLocation() {
@@ -487,51 +487,51 @@ void loop() {
 
     // sensor readings go in here
 
-    Serial.printf("1\r\n");
+    // Serial.printf("1\r\n");
 
     Coord destination = getDestination();
     
-    Serial.printf("2\r\n");
+    // Serial.printf("2\r\n");
 
     Serial.printf("Destination: %f, %f\r\n", destination.lat, destination.lon);
 
     Coord current_location = getLocation();
 
-    Serial.printf("3\r\n");
+    // Serial.printf("3\r\n");
 
     sendLocation(current_location);
 
-    Serial.printf("4\r\n");
+    // Serial.printf("4\r\n");
 
     double forward_azimuth = get_azimuth(current_location, destination);
 
-    Serial.printf("5\r\n");
+    // Serial.printf("5\r\n");
 
     double heading = update_compass();
 
-    Serial.printf("6\r\n");
+    // Serial.printf("6\r\n");
 
     double filtered_heading = filter.step(heading);
 
-    Serial.printf("7\r\n");
+    // Serial.printf("7\r\n");
 
     double calc_angle = forward_azimuth - filtered_heading + theta0;
 
-    Serial.printf("8\r\n");
+    // Serial.printf("8\r\n");
 
     int actual_angle = angle_in_range(calc_angle);
 
-    Serial.printf("Forward azimuth: %f\r\n", forward_azimuth);
-    Serial.printf("Heading: %f\r\n", heading);
-    Serial.printf("Filtered heading: %f\r\n", filtered_heading);
-    Serial.printf("Calc angle: %f\r\n", calc_angle);
-    Serial.printf("Final angle: %d\r\n", actual_angle);
+    // Serial.printf("Forward azimuth: %f\r\n", forward_azimuth);
+    // Serial.printf("Heading: %f\r\n", heading);
+    // Serial.printf("Filtered heading: %f\r\n", filtered_heading);
+    // Serial.printf("Calc angle: %f\r\n", calc_angle);
+    // Serial.printf("Final angle: %d\r\n", actual_angle);
 
-    Serial.printf("9\r\n");
+    // Serial.printf("9\r\n");
 
     set_LED_direction(actual_angle);
 
-    Serial.printf("10\r\n");
+    // Serial.printf("10\r\n");
 
     ping_timer = millis();
   }
@@ -547,8 +547,6 @@ void loop() {
 float update_compass() {
   compass.update();
   float compass_heading = compass.heading;
-
-  Serial.printf("heading from compass: %f", compass_heading);
 
   float clockwise_heading = 360.0 - compass_heading;
   return clockwise_heading;
