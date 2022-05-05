@@ -82,18 +82,6 @@ IIR filter(alpha);
 
 double theta0 = -30;
 
-
-LedControl lc = LedControl(35,36,15,1);
-byte north[9]= {B00000001,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B00000001};
-byte south[9]= {B10000000,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B10000000};
-byte east[9]= {B00000000,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B11111111};
-byte west[9]= {B11111111,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B00000000};
-byte northwest[9]= {B11111111,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B00000001};
-byte southwest[9]= {B11111111,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B10000000};
-byte northeast[9]= {B00000001,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B11111111};
-byte southeast[9]= {B10000000,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B11111111};
-
-
 void setup() {
   Serial.begin(115200); //for debugging if needed.
   delay(50); //pause to make sure comms get set up
@@ -174,184 +162,184 @@ void setup() {
 
 void loop() {
   
-  // // Get current lat, lon
+  // Get current lat, lon
 
-  // double current_lat;
-  // double current_lon;
+  double current_lat;
+  double current_lon;
 
-  // // Serial.println("1\r\n");
+  // Serial.println("1\r\n");
 
-  // int offset = sprintf(json_body, "%s", PREFIX);
-  // int n = WiFi.scanNetworks(); //run a new scan. could also modify to use original scan from setup so quicker (though older info)
-  // // Serial.println("scan done");
-  // if (n == 0) {
-  //   Serial.println("no networks found");
-  //   // Serial.println("2\r\n");
-  // }
-  // else {
-  //   // Serial.println("3\r\n");
-  //   int max_aps = max(min(MAX_APS, n), 1);
-  //   for (int i = 0; i < max_aps; ++i) { //for each valid access point
-  //     uint8_t* mac = WiFi.BSSID(i); //get the MAC Address
-  //     offset += wifi_object_builder(json_body + offset, JSON_BODY_SIZE-offset, WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSID(i)); //generate the query
-  //     if(i!=max_aps-1){
-  //       offset +=sprintf(json_body+offset,",");//add comma between entries except trailing.
-  //     }
-  //   }
+  int offset = sprintf(json_body, "%s", PREFIX);
+  int n = WiFi.scanNetworks(); //run a new scan. could also modify to use original scan from setup so quicker (though older info)
+  // Serial.println("scan done");
+  if (n == 0) {
+    Serial.println("no networks found");
+    // Serial.println("2\r\n");
+  }
+  else {
+    // Serial.println("3\r\n");
+    int max_aps = max(min(MAX_APS, n), 1);
+    for (int i = 0; i < max_aps; ++i) { //for each valid access point
+      uint8_t* mac = WiFi.BSSID(i); //get the MAC Address
+      offset += wifi_object_builder(json_body + offset, JSON_BODY_SIZE-offset, WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSID(i)); //generate the query
+      if(i!=max_aps-1){
+        offset +=sprintf(json_body+offset,",");//add comma between entries except trailing.
+      }
+    }
 
-  //   // Serial.println("4\r\n");
+    // Serial.println("4\r\n");
 
-  //   sprintf(json_body + offset, "%s", SUFFIX);
+    sprintf(json_body + offset, "%s", SUFFIX);
     
-  //   int len = strlen(json_body);
+    int len = strlen(json_body);
 
-  //   // request[0] = '\0';
-  //   // response[0] = '\0';
-  //   // Make a HTTP request:
-  //   // Serial.println("GETing geolocation");
-  //   // request[0] = '\0'; //set 0th byte to null
+    // request[0] = '\0';
+    // response[0] = '\0';
+    // Make a HTTP request:
+    // Serial.println("GETing geolocation");
+    // request[0] = '\0'; //set 0th byte to null
 
-  //   // Serial.println("5\r\n");
+    // Serial.println("5\r\n");
 
-  //   memset(request, 0, sizeof(request));
-  //   memset(response, 0, sizeof(response));
+    memset(request, 0, sizeof(request));
+    memset(response, 0, sizeof(response));
 
-  //   // Serial.println("6\r\n");
+    // Serial.println("6\r\n");
 
-  //   offset = 0; //reset offset variable for sprintf-ing
-  //   offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
-  //   offset += sprintf(request + offset, "Host: googleapis.com\r\n");
-  //   offset += sprintf(request + offset, "Content-Type: application/json\r\n");
-  //   offset += sprintf(request + offset, "cache-control: no-cache\r\n");
-  //   offset += sprintf(request + offset, "Content-Length: %d\r\n\r\n", len);
-  //   offset += sprintf(request + offset, "%s\r\n", json_body);
-  //   // do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
+    offset = 0; //reset offset variable for sprintf-ing
+    offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
+    offset += sprintf(request + offset, "Host: googleapis.com\r\n");
+    offset += sprintf(request + offset, "Content-Type: application/json\r\n");
+    offset += sprintf(request + offset, "cache-control: no-cache\r\n");
+    offset += sprintf(request + offset, "Content-Length: %d\r\n\r\n", len);
+    offset += sprintf(request + offset, "%s\r\n", json_body);
+    // do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
 
-  //   // Serial.println("7\r\n");
+    // Serial.println("7\r\n");
 
 
-  //   do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-  //   // Serial.println("finished GETing geolocation");
+    do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
+    // Serial.println("finished GETing geolocation");
 
-  //   // Serial.println("8\r\n");
+    // Serial.println("8\r\n");
 
-  //   // Serial.printf("%d\r\n", (int)*response);
+    // Serial.printf("%d\r\n", (int)*response);
 
-  //   if (!*response) {
-  //     Serial.printf("Empty response\r\n");
-  //     return;
-  //   }
+    if (!*response) {
+      Serial.printf("Empty response\r\n");
+      return;
+    }
 
-  //   // Serial.printf("%d\r\n", (int)*response);
+    // Serial.printf("%d\r\n", (int)*response);
 
-  //   // Serial.println(response);
+    // Serial.println(response);
 
-  //   char* start = strchr(response,'{');
-  //   char* end = strrchr(response,'}');
+    char* start = strchr(response,'{');
+    char* end = strrchr(response,'}');
 
-  //   if (!start || !end) {
-  //     Serial.printf("Invalid response: does not include necessary braces");
-  //     return;
-  //   }
+    if (!start || !end) {
+      Serial.printf("Invalid response: does not include necessary braces");
+      return;
+    }
 
-  //   // Serial.printf("%s\r\n", response);
+    // Serial.printf("%s\r\n", response);
 
-  //   *(end + 1) = NULL;
+    *(end + 1) = NULL;
 
-  //   // Serial.println("9\r\n");
+    // Serial.println("9\r\n");
 
-  //   // DynamicJsonDocument doc(5000);
-  //   DynamicJsonDocument doc(950);
-  //   DeserializationError error = deserializeJson(doc, start);
+    // DynamicJsonDocument doc(5000);
+    DynamicJsonDocument doc(950);
+    DeserializationError error = deserializeJson(doc, start);
 
-  //   // Serial.println("10\r\n");
+    // Serial.println("10\r\n");
 
-  //   if (error) {
-  //     Serial.print(F("deserializeJson failed"));
-  //     return;
-  //   }
+    if (error) {
+      Serial.print(F("deserializeJson failed"));
+      return;
+    }
 
-  //   current_lat = doc["location"]["lat"];
-  //   current_lon = doc["location"]["lng"];
+    current_lat = doc["location"]["lat"];
+    current_lon = doc["location"]["lng"];
 
-  //   // Serial.println("11\r\n");
+    // Serial.println("11\r\n");
 
-  //   memset(request, 0, sizeof(request));
-  //   memset(response, 0, sizeof(response));
+    memset(request, 0, sizeof(request));
+    memset(response, 0, sizeof(response));
 
-  //   // Serial.println("12\r\n");
+    // Serial.println("12\r\n");
 
   
 
 
-  //   // Serial.printf("lat: %f, lon: %f\r\n", current_lat, current_lon);
+    // Serial.printf("lat: %f, lon: %f\r\n", current_lat, current_lon);
 
-  //   double dest_lat = 42.3597118;
-  //   double dest_lon = -71.0941475;
-
-
-  //   offset = 0;
-  //   offset += sprintf(request + offset, "GET https://608dev-2.net/sandbox/sc/team44/compute_angle.py?current_lat=%f&current_lon=%f&dest_lat=%f&dest_lon=%f HTTP/1.1\r\n", current_lat, current_lon, dest_lat, dest_lon);
-  //   offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
-  //   offset += sprintf(request + offset, "\r\n");
-  //   do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-  //   double forward_azimuth = atof(response);
-
-  //   // Serial.println("13\r\n");
-
-  //   memset(request, 0, sizeof(request));
-  //   memset(response, 0, sizeof(response));
-
-  //   // Serial.println("14\r\n");
-
-  //   // Serial.printf("%s\r\n", response);
-
-  //   double heading = update_compass();
-
-  //   // Serial.println("15\r\n");
+    double dest_lat = 42.3597118;
+    double dest_lon = -71.0941475;
 
 
-  //   double filtered_heading = filter.step(heading);
+    offset = 0;
+    offset += sprintf(request + offset, "GET https://608dev-2.net/sandbox/sc/team44/compute_angle.py?current_lat=%f&current_lon=%f&dest_lat=%f&dest_lon=%f HTTP/1.1\r\n", current_lat, current_lon, dest_lat, dest_lon);
+    offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
+    offset += sprintf(request + offset, "\r\n");
+    do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
+    double forward_azimuth = atof(response);
+
+    // Serial.println("13\r\n");
+
+    memset(request, 0, sizeof(request));
+    memset(response, 0, sizeof(response));
+
+    // Serial.println("14\r\n");
+
+    // Serial.printf("%s\r\n", response);
+
+    double heading = update_compass();
+
+    // Serial.println("15\r\n");
 
 
-  //   // Serial.println("16\r\n");
-
-  //   // Serial.printf("Heading is %f\r\n", filtered_heading);
-
-  //   // Serial.printf("Forward azimuth is %f\r\n", forward_azimuth);
-  //   double calc_angle = forward_azimuth - filtered_heading + theta0;
-
-  //   // Serial.println("17\r\n");
+    double filtered_heading = filter.step(heading);
 
 
-  //   int actual_angle = angle_in_range(calc_angle);
+    // Serial.println("16\r\n");
 
-  //   // Serial.println("18\r\n");
+    // Serial.printf("Heading is %f\r\n", filtered_heading);
 
-  //   // Serial.printf("Actual angle: %d\r\n\n", actual_angle);
+    // Serial.printf("Forward azimuth is %f\r\n", forward_azimuth);
+    double calc_angle = forward_azimuth - filtered_heading + theta0;
 
-  //   set_LED_direction(actual_angle);
+    // Serial.println("17\r\n");
 
-  //   // Serial.println("19\r\n");
 
-  // }
+    int actual_angle = angle_in_range(calc_angle);
+
+    // Serial.println("18\r\n");
+
+    // Serial.printf("Actual angle: %d\r\n\n", actual_angle);
+
+    set_LED_direction(actual_angle);
+
+    // Serial.println("19\r\n");
+
+  }
   
-  imu.getAres();
+  // imu.getAres();
 
-  imu.readAccelData(imu.accelCount);
-  double x = imu.accelCount[0] * imu.aRes;
-  double y = imu.accelCount[1] * imu.aRes;
+  // imu.readAccelData(imu.accelCount);
+  // double x = imu.accelCount[0] * imu.aRes;
+  // double y = imu.accelCount[1] * imu.aRes;
 
-  double angle = rad_to_deg(atan2(y, x));
+  // double angle = rad_to_deg(atan2(y, x));
 
-  // imu.readGyroData(imu.gyroCount);
-  // double x = imu.gyroCount[0] * imu.gRes;
-  // double y = imu.gyroCount[1] * imu.gRes;
-  // double z = imu.gyroCount[2] * imu.gRes;
+  // // imu.readGyroData(imu.gyroCount);
+  // // double x = imu.gyroCount[0] * imu.gRes;
+  // // double y = imu.gyroCount[1] * imu.gRes;
+  // // double z = imu.gyroCount[2] * imu.gRes;
 
-  // Serial.printf("x: %f\r\n", x);
-  // Serial.printf("y: %f\r\n", y);
-  Serial.printf("angle: %f\r\n\n", angle);
+  // // Serial.printf("x: %f\r\n", x);
+  // // Serial.printf("y: %f\r\n", y);
+  // Serial.printf("angle: %f\r\n\n", angle);
 
   
 }
@@ -452,10 +440,4 @@ void set_LED_direction(int angle) {
   else if ((angle > 247.5) && (angle <= 292.5)){
     show_west();
   }
-  // else{
-  //   show_northeast();
-  // }
-
-
-
 }

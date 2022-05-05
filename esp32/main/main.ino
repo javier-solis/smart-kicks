@@ -1,14 +1,30 @@
 // === All Imports ===
-#include <SPI.h>
+
 #include <WiFiClientSecure.h>
 #include <WiFiClient.h>
-#include <ArduinoJson.h>
+
+#include <SPI.h>
+#include <math.h>
 #include <string.h>
+
+#include <mpu9255_esp32.h>
+#include <compass.h>
+
+#include "iir.hpp"
+
+#include <ArduinoJson.h>
+
 #include "ButtonClass.h"
 #include "LedControl.h"
 #include "binary.h"
 #include "MatrixFunctions.h"
 
+
+struct Coord {
+  double lat;
+  double lon;
+  int error; // 0 for ok, 1 for error
+};
 
 // === Time Variables ===
 // Note, these are all represented by their millisecond value, unless otherwise specified
@@ -83,8 +99,11 @@ char* SERVER = "googleapis.com";  // Server URL
 // const char PASSWORD[] = "608g2020";
 
 // Hotspot:                                    //  <------------------------------- USER MUST EDIT THIS!!!!!!
-const char NETWORK[] = "SLP-F9FD71W0LMX0";
-const char PASSWORD[] = "bqd1nuuv3nd8d";
+// const char NETWORK[] = "SLP-F9FD71W0LMX0";
+// const char PASSWORD[] = "bqd1nuuv3nd8d";
+
+const char NETWORK[] = "EECS_Labs";
+const char PASSWORD[] = "";
 
 
 
@@ -133,20 +152,33 @@ int wifi_object_builder(char* object_string, uint32_t os_len, uint8_t channel, i
   }
 }
 
+// More setup variables
 
-// ======
+MPU9255 imu; //imu object called, appropriately, imu
 
-/**
- *Used to get your current location.
- */
-void pingLocation() {
+Compass compass(-14.75, imu); //For Cambridge, MA area
 
+float beta = 0.90; // 0 <= beta <= 1, increase to emphasize new values more
+
+float alpha = 1 - beta;
+IIR filter(alpha);
+
+double theta0 = -30;
+
+
+Coord getLocation() {
   int offset = sprintf(json_body, "%s", PREFIX);
   int n = WiFi.scanNetworks(); //run a new scan
   Serial.println("scan done");
   if (n == 0) { // this should never happen, maybe a differenth thing has to happen or else below code will crash
     Serial.println("no networks found");
-  } else {
+
+    return make_error_coord();
+
+    // FIX!! We need to return something in this case, not sure what yet
+
+  }
+  else {
     int max_aps = max(min(MAX_APS, n), 1);
     for (int i = 0; i < max_aps; ++i) { //for each valid access point
       uint8_t* mac = WiFi.BSSID(i); //get the MAC Address
@@ -160,11 +192,15 @@ void pingLocation() {
 
     int len = strlen(json_body);
 
-    request[0] = '\0';
-    response[0] = '\0';
+    // request[0] = '\0';
+    // response[0] = '\0';
+
+    memset(request, 0, sizeof(request));
+    memset(response, 0, sizeof(response));
+
     // Make a HTTPS request:
     Serial.println("GET geolocation");
-    request[0] = '\0'; //set 0th byte to null
+    // request[0] = '\0'; //set 0th byte to null
     offset = 0; //reset offset variable for sprintf-ing
     offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
     offset += sprintf(request + offset, "Host: googleapis.com\r\n");
@@ -173,15 +209,26 @@ void pingLocation() {
     offset += sprintf(request + offset, "Content-Length: %d\r\n\r\n", len);
     offset += sprintf(request + offset, "%s\r\n", json_body);
     bool succeed = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
-    Serial.println("finished GET of geolocation");
-
 
     while(!succeed){ // also add a check to wait every 4 seconds before sending out again
       succeed = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
     }
 
+    if (!*response) {
+      Serial.println("Empty response");
+      return make_error_coord();
+    }
+
+    Serial.println("finished GET of geolocation");
+
     char* start = strchr(response,'{');
     char* end = strrchr(response,'}');
+
+    if (!start || !end) {
+      Serial.println("Invalid response: does not include necessary braces");
+      return make_error_coord();
+    }
+
     *(end + 1) = NULL;
 
     DynamicJsonDocument doc(5000);
@@ -189,35 +236,134 @@ void pingLocation() {
 
     if (error) {
       Serial.print(F("deserializeJson failed"));
-      return;
+      return make_error_coord();
     }
 
     double latitude = doc["location"]["lat"];
     double longitude = doc["location"]["lng"];
 
-    // Make a POST request:
+    memset(request, 0, sizeof(request));
+    memset(response, 0, sizeof(response));
 
-    char json_body[300]; // Should be plenty
-    sprintf(json_body, "user=%s&lat=%f&lon=%f", main_user, latitude, longitude);
+    Coord location;
+    location.lat = latitude;
+    location.lon = longitude;
+    location.error = 0;
 
-    char buffer[1000];
-    int n = sprintf(buffer, "POSTing this to our server: %s", json_body);
-    Serial.println(buffer);
-
-    // Clearing it just for good practice
-    request[0] = '\0';
-    response[0] = '\0';
-    offset = 0;
-
-    offset += sprintf(request + offset, "POST /sandbox/sc/team44/map/main.py HTTP/1.1\r\n");
-    offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
-    offset += sprintf(request + offset, "Content-Type: application/x-www-form-urlencoded\r\n");
-    offset += sprintf(request + offset, "Content-Length: %d\r\n", strlen(json_body));
-    offset += sprintf(request + offset, "\r\n");
-    offset += sprintf(request + offset, "%s", json_body);
-    do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-    Serial.println("finished POSTing to our server");
+    return location;
   }
+}
+
+
+// ======
+
+/**
+ *Used to get your current location.
+ */
+void pingLocation(Coord current_location) {
+
+  // int offset = sprintf(json_body, "%s", PREFIX);
+  // int n = WiFi.scanNetworks(); //run a new scan
+  // Serial.println("scan done");
+  // if (n == 0) { // this should never happen, maybe a differenth thing has to happen or else below code will crash
+  //   Serial.println("no networks found");
+  // } else {
+  //   int max_aps = max(min(MAX_APS, n), 1);
+  //   for (int i = 0; i < max_aps; ++i) { //for each valid access point
+  //     uint8_t* mac = WiFi.BSSID(i); //get the MAC Address
+  //     offset += wifi_object_builder(json_body + offset, JSON_BODY_SIZE-offset, WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSID(i)); //generate the query
+  //     if(i!=max_aps-1){
+  //       offset +=sprintf(json_body+offset,",");//add comma between entries except trailing.
+  //     }
+  //   }
+
+  //   sprintf(json_body + offset, "%s", SUFFIX);
+
+  //   int len = strlen(json_body);
+
+  //   // request[0] = '\0';
+  //   // response[0] = '\0';
+
+  //   memset(request, 0, sizeof(request));
+  //   memset(response, 0, sizeof(response));
+
+  //   // Make a HTTPS request:
+  //   Serial.println("GET geolocation");
+  //   // request[0] = '\0'; //set 0th byte to null
+  //   offset = 0; //reset offset variable for sprintf-ing
+  //   offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
+  //   offset += sprintf(request + offset, "Host: googleapis.com\r\n");
+  //   offset += sprintf(request + offset, "Content-Type: application/json\r\n");
+  //   offset += sprintf(request + offset, "cache-control: no-cache\r\n");
+  //   offset += sprintf(request + offset, "Content-Length: %d\r\n\r\n", len);
+  //   offset += sprintf(request + offset, "%s\r\n", json_body);
+  //   bool succeed = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
+
+  //   while(!succeed){ // also add a check to wait every 4 seconds before sending out again
+  //     succeed = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
+  //   }
+
+  //   if (!*response) {
+  //     Serial.println("Empty response");
+  //     return;
+  //   }
+
+  //   Serial.println("finished GET of geolocation");
+
+  //   char* start = strchr(response,'{');
+  //   char* end = strrchr(response,'}');
+
+  //   if (!start || !end) {
+  //     Serial.println("Invalid response: does not include necessary braces");
+  //     return;
+  //   }
+
+  //   *(end + 1) = NULL;
+
+  //   DynamicJsonDocument doc(5000);
+  //   DeserializationError error = deserializeJson(doc, start);
+
+  //   if (error) {
+  //     Serial.print(F("deserializeJson failed"));
+  //     return;
+  //   }
+
+  //   double latitude = doc["location"]["lat"];
+  //   double longitude = doc["location"]["lng"];
+
+  //   memset(request, 0, sizeof(request));
+  //   memset(response, 0, sizeof(response));
+
+  // Make a POST request:
+
+  double latitude = current_location.lat;
+  double longitude = current_location.lon;
+
+  char json_body[300]; // Should be plenty
+  sprintf(json_body, "user=%s&lat=%f&lon=%f", main_user, latitude, longitude);
+
+  char buffer[1000];
+  int n = sprintf(buffer, "POSTing this to our server: %s", json_body);
+  Serial.println(buffer);
+
+  // Clearing it just for good practice
+  // request[0] = '\0';
+  // response[0] = '\0';
+
+  memset(request, 0, sizeof(request));
+  memset(response, 0, sizeof(response));
+
+  int offset = 0;
+
+  offset += sprintf(request + offset, "POST /sandbox/sc/team44/map/main.py HTTP/1.1\r\n");
+  offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
+  offset += sprintf(request + offset, "Content-Type: application/x-www-form-urlencoded\r\n");
+  offset += sprintf(request + offset, "Content-Length: %d\r\n", strlen(json_body));
+  offset += sprintf(request + offset, "\r\n");
+  offset += sprintf(request + offset, "%s", json_body);
+  do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
+  Serial.println("finished POSTing to our server");
+
 }
 
 
@@ -242,6 +388,54 @@ void getLandmarkLatLon(){
   landmark_lat = 0;
   landmark_lon = 0;
 
+}
+
+bool on_off_check(){
+  int curr_state = power_button.update();
+
+  if(powered_off){
+
+    blinking_center_animation();
+
+    if(curr_state==1){
+      powered_off=false;
+      show_center();
+
+      getLandmarkLatLon();
+
+      Serial.println("Powered on");
+    }
+    return true;
+  }
+
+  if(curr_state==2){
+    powered_off=true;
+    Serial.println("Powered off");
+  }
+  return false;
+}
+
+double get_azimuth(Coord current_location) {
+  double current_lat = current_location.lat;
+  double current_lon = current_location.lon;
+  
+  double dest_lat = 42.3597118;
+  double dest_lon = -71.0941475;
+
+  memset(request, 0, sizeof(request));
+  memset(response, 0, sizeof(response));
+
+  int offset = 0;
+  offset += sprintf(request + offset, "GET https://608dev-2.net/sandbox/sc/team44/compute_angle.py?current_lat=%f&current_lon=%f&dest_lat=%f&dest_lon=%f HTTP/1.1\r\n", current_lat, current_lon, dest_lat, dest_lon);
+  offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
+  offset += sprintf(request + offset, "\r\n");
+  do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
+  double forward_azimuth = atof(response);
+
+  memset(request, 0, sizeof(request));
+  memset(response, 0, sizeof(response));
+
+  return forward_azimuth;
 }
 
 
@@ -313,34 +507,19 @@ void setup() {
 
   Serial.println("Powered off");
 
+
+  Serial.printf("Compass calibration will begin in 3s\r\n");
+  delay(3000);
+
+  Serial.printf("Calibrating: spin system in 360deg motions for 15s\r\n");
+
+  compass.calibrate(); //Calibrate for a set # of milliseconds
+
+  Serial.printf("Compass is calibrated\r\n");
+
+  filter.set(update_compass());
+
 }
-
-
-bool on_off_check(){
-  int curr_state = power_button.update();
-
-  if(powered_off){
-
-    blinking_center_animation();
-
-    if(curr_state==1){
-      powered_off=false;
-      show_center();
-
-      getLandmarkLatLon();
-
-      Serial.println("Powered on");
-    }
-    return true;
-  }
-
-  if(curr_state==2){
-    powered_off=true;
-    Serial.println("Powered off");
-  }
-  return false;
-}
-
 
 void loop() {
 
@@ -371,17 +550,52 @@ void loop() {
 
 
 
+    Coord current_location = getLocation();
 
-    pingLocation();
+    pingLocation(current_location);
+    double forward_azimuth = get_azimuth(current_location);
+
+
+    double heading = update_compass();
+    double filtered_heading = filter.step(heading);
+
+    double calc_angle = forward_azimuth - filtered_heading + theta0;
+
+    int actual_angle = angle_in_range(calc_angle);
+    set_LED_direction(actual_angle);
 
     ping_timer = millis();
   }
 
-
-
-
-
-
   while (millis() - primary_timer < LOOP_PERIOD); //wait for primary timer to increment
   primary_timer = millis();
+}
+
+// double rad_to_deg(double rad) {
+//   return rad * 180.0 / PI;
+// }
+
+float update_compass() {
+  compass.update();
+  float compass_heading = compass.heading;
+  float clockwise_heading = 360.0 - compass_heading;
+  return clockwise_heading;
+}
+
+int real_mod(int x, int m) {
+  return (x % m + m) % m;
+}
+
+int angle_in_range(double angle) {
+  int rounded_angle = (int)round(angle);
+  return real_mod(rounded_angle, 360);
+}
+
+Coord make_error_coord() {
+  Coord error_coord;
+  error_coord.lat = 0.0;
+  error_coord.lon = 0.0;
+  error_coord.error = 1;
+
+  return error_coord;
 }
