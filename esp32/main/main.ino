@@ -41,7 +41,7 @@ const int LOOP_PERIOD = 5; // in ms
 uint32_t primary_timer=0;
 
  // (how often data should be collected and uploaded)
-const int PING = 10*ONE_SEC;
+const int PING = 6*ONE_SEC;
 uint32_t ping_timer = 0;
 
 char main_user[60];
@@ -56,8 +56,8 @@ Button power_button(BUTTON_NUM);
 
 
 // === Variables For Landmark Getting ===
-int landmark_lat = 0;
-int landmark_lon = 0;
+// int landmark_lat = 0;
+// int landmark_lon = 0;
 
 
 // === WiFi Variables ===
@@ -260,81 +260,7 @@ Coord getLocation() {
 /**
  *Used to get your current location.
  */
-void pingLocation(Coord current_location) {
-
-  // int offset = sprintf(json_body, "%s", PREFIX);
-  // int n = WiFi.scanNetworks(); //run a new scan
-  // Serial.println("scan done");
-  // if (n == 0) { // this should never happen, maybe a differenth thing has to happen or else below code will crash
-  //   Serial.println("no networks found");
-  // } else {
-  //   int max_aps = max(min(MAX_APS, n), 1);
-  //   for (int i = 0; i < max_aps; ++i) { //for each valid access point
-  //     uint8_t* mac = WiFi.BSSID(i); //get the MAC Address
-  //     offset += wifi_object_builder(json_body + offset, JSON_BODY_SIZE-offset, WiFi.channel(i), WiFi.RSSI(i), WiFi.BSSID(i)); //generate the query
-  //     if(i!=max_aps-1){
-  //       offset +=sprintf(json_body+offset,",");//add comma between entries except trailing.
-  //     }
-  //   }
-
-  //   sprintf(json_body + offset, "%s", SUFFIX);
-
-  //   int len = strlen(json_body);
-
-  //   // request[0] = '\0';
-  //   // response[0] = '\0';
-
-  //   memset(request, 0, sizeof(request));
-  //   memset(response, 0, sizeof(response));
-
-  //   // Make a HTTPS request:
-  //   Serial.println("GET geolocation");
-  //   // request[0] = '\0'; //set 0th byte to null
-  //   offset = 0; //reset offset variable for sprintf-ing
-  //   offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
-  //   offset += sprintf(request + offset, "Host: googleapis.com\r\n");
-  //   offset += sprintf(request + offset, "Content-Type: application/json\r\n");
-  //   offset += sprintf(request + offset, "cache-control: no-cache\r\n");
-  //   offset += sprintf(request + offset, "Content-Length: %d\r\n\r\n", len);
-  //   offset += sprintf(request + offset, "%s\r\n", json_body);
-  //   bool succeed = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
-
-  //   while(!succeed){ // also add a check to wait every 4 seconds before sending out again
-  //     succeed = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
-  //   }
-
-  //   if (!*response) {
-  //     Serial.println("Empty response");
-  //     return;
-  //   }
-
-  //   Serial.println("finished GET of geolocation");
-
-  //   char* start = strchr(response,'{');
-  //   char* end = strrchr(response,'}');
-
-  //   if (!start || !end) {
-  //     Serial.println("Invalid response: does not include necessary braces");
-  //     return;
-  //   }
-
-  //   *(end + 1) = NULL;
-
-  //   DynamicJsonDocument doc(5000);
-  //   DeserializationError error = deserializeJson(doc, start);
-
-  //   if (error) {
-  //     Serial.print(F("deserializeJson failed"));
-  //     return;
-  //   }
-
-  //   double latitude = doc["location"]["lat"];
-  //   double longitude = doc["location"]["lng"];
-
-  //   memset(request, 0, sizeof(request));
-  //   memset(response, 0, sizeof(response));
-
-  // Make a POST request:
+void sendLocation(Coord current_location) {
 
   double latitude = current_location.lat;
   double longitude = current_location.lon;
@@ -371,22 +297,35 @@ void pingLocation(Coord current_location) {
 * Get the last landmark that the user selected on the website.
 * Returns an array of floats: [lat, lon].
 */
-void getLandmarkLatLon(){
-  request[0] = '\0';
-  response[0] = '\0';
+Coord getDestination() {
+  memset(request, 0, sizeof(request));
+  memset(response, 0, sizeof(response));
+
   int offset = 0;
+  offset += sprintf(request + offset, "GET https://608dev-2.net/sandbox/sc/team44/map/main.py?destination=%s HTTP/1.1\r\n", main_user);
+  offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
+  offset += sprintf(request + offset, "\r\n");
+  do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
 
-  // TODO, finalize URL and stuff:
+  if (!*response) {
+    Serial.println("Empty response");
+    return make_error_coord();
+  }
 
-  // offset += sprintf(request + offset, "GET https://608dev-2.net/sandbox/sc/team44/map/landmarks.py?getLandmark=%s HTTP/1.1\r\n", main_user);
-  // offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
-  // offset += sprintf(request + offset, "\r\n");
-  // do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
+  char* ptr = strtok(response, ",");
+  double dest_lat = atof(ptr);
+  ptr = strtok(NULL, ",");
+  double dest_lon = atof(ptr);
 
-  // TODO: now with this response, do some delimiter stuff to get the actual lat and lon numbers
+  memset(request, 0, sizeof(request));
+  memset(response, 0, sizeof(response));
 
-  landmark_lat = 0;
-  landmark_lon = 0;
+  Coord destination;
+  destination.lat = dest_lat;
+  destination.lon = dest_lon;
+  destination.error = 0;
+
+  return destination;
 
 }
 
@@ -401,7 +340,7 @@ bool on_off_check(){
       powered_off=false;
       show_center();
 
-      getLandmarkLatLon();
+      // getLandmarkLatLon();
 
       Serial.println("Powered on");
     }
@@ -415,12 +354,15 @@ bool on_off_check(){
   return false;
 }
 
-double get_azimuth(Coord current_location) {
+double get_azimuth(Coord current_location, Coord destination) {
   double current_lat = current_location.lat;
   double current_lon = current_location.lon;
   
-  double dest_lat = 42.3597118;
-  double dest_lon = -71.0941475;
+  // double dest_lat = 42.3597118;
+  // double dest_lon = -71.0941475;
+
+  double dest_lat = destination.lat;
+  double dest_lon = destination.lon;
 
   memset(request, 0, sizeof(request));
   memset(response, 0, sizeof(response));
@@ -508,14 +450,16 @@ void setup() {
   Serial.println("Powered off");
 
 
-  Serial.printf("Compass calibration will begin in 3s\r\n");
-  delay(3000);
+  // Calibration steps
 
-  Serial.printf("Calibrating: spin system in 360deg motions for 15s\r\n");
+  // Serial.printf("Compass calibration will begin in 3s\r\n");
+  // delay(3000);
 
-  compass.calibrate(); //Calibrate for a set # of milliseconds
+  // Serial.printf("Calibrating: spin system in 360deg motions for 15s\r\n");
 
-  Serial.printf("Compass is calibrated\r\n");
+  // compass.calibrate(); //Calibrate for a set # of milliseconds
+
+  // Serial.printf("Compass is calibrated\r\n");
 
   filter.set(update_compass());
 
@@ -541,28 +485,47 @@ void loop() {
 
     // sensor readings go in here
 
+    Serial.printf("1\r\n");
 
+    Coord destination = getDestination();
+    
+    Serial.printf("2\r\n");
 
-
-
-
-    // other get and posts go here
-
-
+    Serial.printf("Destination: %f,%f\r\n", destination.lat, destination.lon);
 
     Coord current_location = getLocation();
 
-    pingLocation(current_location);
-    double forward_azimuth = get_azimuth(current_location);
+    Serial.printf("3\r\n");
 
+    sendLocation(current_location);
+
+    Serial.printf("4\r\n");
+
+    double forward_azimuth = get_azimuth(current_location, destination);
+
+    Serial.printf("5\r\n");
 
     double heading = update_compass();
+
+    Serial.printf("6\r\n");
+
     double filtered_heading = filter.step(heading);
+
+    Serial.printf("7\r\n");
 
     double calc_angle = forward_azimuth - filtered_heading + theta0;
 
+    Serial.printf("8\r\n");
+
     int actual_angle = angle_in_range(calc_angle);
+
+    Serial.printf("Angle: %d\r\n", actual_angle);
+
+    Serial.printf("9\r\n");
+
     set_LED_direction(actual_angle);
+
+    Serial.printf("10\r\n");
 
     ping_timer = millis();
   }
