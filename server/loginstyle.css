@@ -6,14 +6,32 @@ p {
   color: rgb(16, 93, 182);
 }
 
-.loginbox {
-  color: aliceblue;
+#wholepage {
   display: flex;
+  align-items: center;
   justify-content: center;
+  min-width: 50vw;
+  min-height: 50vw;
 }
 
-.infobox {
-  color: aliceblue;
+#loginbox {
+  background-color: aliceblue;
+  display: flex;
+  justify-content: center;
+  padding: 4vw;
+  flex-direction: column;
+  align-items: center;
+  max-width: fit-content;
+  border-color: darkblue;
+  border-radius: 2vw;
+  border-width: 0.5vw;
+  margin: 2vw;
+  border-style: double;
+}
+
+/* 
+#infobox {
+  background-color: aliceblue;
   display: flex;
   justify-content: left;
-}
+} */

@@ -35,17 +35,39 @@ def request_handler(request):
             return redirectpage
         return f'''<!DOCTYPE html>
         <html>
+        <link rel="stylesheet" href="interstyle.css">
         <form action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py" method="post">
-        <label for="plots">Click here to check your plot data:</label>
-        <input type="submit" id="plots" name="plots"><br>
-        <label for="maps">Click here to check your map data:</label><br>
-        <input type="submit" id="maps" name="maps"><br>
-        <label for="logout">Click here to logout:</label><br>
-        <input type="submit" id="logout" name="logout"><br>
-        <input type="hidden" id="user" name="user" value={request['values']['user']}>User: {request['values']['user']}</input>
+        <div id="wholeinter">
+        <div id="interpage">
+        <h1>{request['values']['user']}\'s home page!</h1>
+        <input class="interbutton" type="submit" id="plots" name="plots" value="see plot data"><br>
+        <input class="interbutton" type="submit" id="maps" name="maps" value="see map data"><br>
+        <input class="interbutton" type="submit" id="logout" name="logout" value="logout"><br>
+        <input type="hidden" id="user" name="user" value={request['values']['user']}></input>
         </form>
+        </div>
+        </div>
         </html>
         ''' 
+        # return f'''<!DOCTYPE html>
+        # <html>
+        # <link rel="stylesheet" href="interstyle.css">
+        # <form action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py" method="post">
+        # <div id="wholeinter">
+        # <div id="interpage">
+        # <h1>{request['values']['user']}\'s home page!</h1>
+        # # <label for="plots">Click here to check your plot data:</label>
+        # <input class="interbutton" type="submit" id="plots" name="plots" value="see plot data"><br>
+        # # <label for="maps">Click here to check your map data:</label><br>
+        # <input class="interbutton" type="submit" id="maps" name="maps" value="see map data"><br>
+        # # <label for="logout">Click here to logout:</label><br>
+        # <input class="interbutton" type="submit" id="logout" name="logout" value="logout"><br>
+        # <input type="hidden" id="user" name="user" value={request['values']['user']}></input>
+        # </form>
+        # </div>
+        # </div>
+        # </html>
+        # ''' 
         #return some HTTP with graphs here!
     else:
         if('plots' in request['form'] and 'user' in request['form']):
