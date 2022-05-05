@@ -2,8 +2,11 @@ import sqlite3
 from datetime import datetime, timedelta
 import json
 from typing import *
+# from xmlrpc.client import DateTime
 import numpy as np
 import sys
+
+from sympy import sring
 from bokeh.plotting import figure
 from bokeh.embed import json_item
 
@@ -91,14 +94,24 @@ def check_in_bounds(coord: Tuple[float, float]):
     top_left = HarvardStadium
     bot_right = TuftMedical
 
-    return (top_left[0] < coord[0] and coord[1] < top_left[1] and \
-            coord[0] < bot_right[0] and bot_right[0] < coord[1])
+    return (top_left[1] < coord[1] and coord[0] < top_left[0] and \
+            coord[1] < bot_right[1] and bot_right[0] < coord[0])
 
-def make_datatime_object(unix_time: int) -> datetime: # seems a little complex but im not sure what else to do
-    return datetime.strptime( datetime.utcfromtimestamp(unix_time).strftime(time_format) , time_format) 
+def make_datatime_object(unix_time: int) -> datetime: # seems a litle complex but im not sure what else to do
+
+    # or can this be a string and the graphs x axis will take it in happily
+    return datetime.strptime( datetime.utcfromtimestamp(unix_time)) 
 
 def get_now_time() -> int:
+    """
+    Returns the current time, in Unix seconds.
+    """
     return int(datetime.now().timestamp())
+
+def convert_unix_to_est(unix_time: int)-> str:
+    return datetime.utcfromtimestamp(unix_time).strftime(time_format)
+
+    return "lol"
 
 # ==
 
@@ -116,7 +129,7 @@ def get_data(GET_type: str, user: str) -> str:
         return row[0]
 
 
-    one_hour_ago = get_now_time() - 60*60
+    one_hour_ago: int = get_now_time() - 60*60
 
     # === Mostly used by web-browser for debugging or the curious ===
 
@@ -167,7 +180,8 @@ def get_data(GET_type: str, user: str) -> str:
             allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing>? ORDER by timing ASC''', (user, one_hour_ago)).fetchall()
 
         plot = figure(x_axis_label="Time (s)", y_axis_label="Velocity (m/s)", x_axis_type='datetime')
-        
+        # plot.xaxis.()
+
         time: List[datetime] = []
         consec_vel: List[float] = []
         avg_vel: List[float] = []
@@ -197,6 +211,7 @@ def request_handler(request) -> str:
         c.execute('''CREATE TABLE IF NOT EXISTS loc_data (user text, lat real, lon real, dist_delta real, time_delta, timing int)''') # dist_delta in meters
         c.execute('''CREATE TABLE IF NOT EXISTS vel_data (user text, consec_vel real, avg_vel real, timing int)''')
         c.execute('''CREATE TABLE IF NOT EXISTS all_users (user text)''')
+        c.execute('''CREATE TABLE IF NOT EXISTS bad_loc_data (lat real, lon real)''') # this exists just for curiosity purposes. May be useful later on too.
 
     if request["method"] == "POST":
         try:
@@ -206,8 +221,14 @@ def request_handler(request) -> str:
 
         except:
             return "Error: Invalid POST body."
-        
+
         with sqlite3.connect(current_db) as c:
+                    
+            if not check_in_bounds([lat, lon]):
+                c.execute('''INSERT into bad_loc_data VALUES (?, ?)''', (lat, lon))
+
+                return "Error: lat and/or lon are outside of MIT's boundaries"
+
 
             user_exists = c.execute('''SELECT * FROM all_users WHERE user=?''', (user,)).fetchone()
         
