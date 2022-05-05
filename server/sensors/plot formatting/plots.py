@@ -97,7 +97,7 @@ def request_handler(request):
         now = datetime.datetime.now()
         conn = sqlite3.connect(example_db)
         c = conn.cursor()
-        plot2 = figure(x_axis_type='datetime')
+        plot2 = figure(x_axis_type='datetime', y_range = (0, 30))
         plot3 = figure(x_axis_type='datetime')
         plot4 = figure(x_axis_type='datetime')
         x = []
