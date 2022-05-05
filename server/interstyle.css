@@ -1,0 +1,43 @@
+h1 {
+  color: darkblue;
+  font-size: 1.5cm;
+}
+
+p {
+  color: rgb(16, 93, 182);
+}
+#interpage {
+  background-color: aliceblue;
+  display: flex;
+  justify-content: center;
+  padding-left: 4vw;
+  padding-right: 4vw;
+  padding-bottom: 4vw;
+  padding-top: 2vw;
+  flex-direction: column;
+  align-items: center;
+  min-width: 40vw;
+  border-color: darkblue;
+  border-radius: 2vw;
+  border-width: 0.5vw;
+  margin: 2vw;
+  border-style: double;
+}
+
+#wholeinter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50vw;
+  min-height: 50vw;
+}
+
+input.interbutton {
+  height: 5vw;
+  width: 30vw;
+  background-color: rgb(16, 93, 182);
+  color: white;
+  border-radius: 1vw;
+  font-size: x-large;
+  font-family: Georgia, "Times New Roman", Times, serif;
+}
