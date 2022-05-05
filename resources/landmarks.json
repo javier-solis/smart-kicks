@@ -2,15 +2,15 @@
         
     {
         "name": "Lobby 7",
-        "lat": 42.3591656,
-        "lon": -71.0954187,
+        "lat": 42.3592057337819,
+        "lon": -71.09316160376488,
         "description": "Lobby 7, the main entrance lobby to the Massachusetts Institute of Technology, is the gateway through which many MIT buildings can be accessed."
     },
     
     {
         "name": "Alchemist",
-        "lat": 42.351506,
-        "lon": -71.1354657,
+        "lat": 42.359142547381886,
+        "lon": -71.09403690363447,
         "description": "This is an art installation made by Jaume Plensa in 2010. The piece was designed to emphasize 'thinking and calculation'. It sits near the Stratton Student Center and is across the street from Lobby 7."
     },
 
@@ -30,8 +30,8 @@
 
     {
         "name": "Fairchild Building",
-        "lat": 42.3612937,
-        "lon": -71.0942495,
+        "lat": 42.3610837,
+        "lon": -71.0926911,
         "description": "The Fairchild Building, also known by its number as Building 38, is home to many segments of the EECS department at MIT. The 6.08 Lab is also inside of it!"
     }
 

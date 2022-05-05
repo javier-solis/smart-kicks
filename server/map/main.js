@@ -1,21 +1,21 @@
 const TuftMedical= [42.349566, -71.064458];
 const HarvardStadium = [42.366754, -71.126513];
 
-let locations = {
-  "landmarks": [{
-      "name": "Lobby 7",
-      "lat": 42.3591871,
-      "lon": -71.0931501,
-      "description": "Idk 1"
-      },
-      {
-      "name": "Lobby 10",
-      "lat": 42.35949364379263,
-      "lon": -71.09190495832806,
-      "description": "Idk 2"
-      } 
-  ]    
-}
+// let locations = {
+//   "landmarks": [{
+//       "name": "Lobby 7",
+//       "lat": 42.3591871,
+//       "lon": -71.0931501,
+//       "description": "Idk 1"
+//       },
+//       {
+//       "name": "Lobby 10",
+//       "lat": 42.35949364379263,
+//       "lon": -71.09190495832806,
+//       "description": "Idk 2"
+//       } 
+//   ]    
+// }
 
 
 const mainAddr = "http://608dev-2.net/sandbox/sc/team44/map/";
@@ -44,32 +44,18 @@ function getJSONGroup(array, key, value) {
 
 // == Map Setup Stuff ==
 
-let origin = (()=>{
-  let lat_lon = getJSONGroup(locations.landmarks, "name", "Lobby 7")
-  return [lat_lon.lat, lat_lon.lon];
-})();
+async function getLandmarks() {
+  return fetch('http://608dev-2.net/sandbox/sc/team44/landmarks.py')
+  .then(res => res.json());
+}
 
+function getOrigin() {
+  let lat_lon = getJSONGroup(landmarks, "name", "Lobby 7");
+  return [lat_lon.lat, lat_lon.lon];;
+}
 
 // Main Config
-let map = L.map('map', {
-    maxZoom: 19,
-    minZoom: 15,
-    maxBounds: [
-        TuftMedical, // south west
-        HarvardStadium, // north east
-        ],
-        maxBoundsViscosity: 1.0
-    }).setView(origin, 18);
 
-// OSM Tiles
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 20,
-    maxNativeZoom: 20,
-attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap Contributors</a>'
-}).addTo(map);
-
-// show the scale bar on the lower left corner
-L.control.scale({imperial: true, metric: true}).addTo(map);
 
 
 // Retrieving Specific User Data
@@ -90,8 +76,33 @@ async function userTrail() {
   }
 }
 
+let landmarks;
+let map;
 
 async function main() {
+  landmarks = await getLandmarks();
+  const origin = getOrigin();
+
+  map = L.map('map', {
+    maxZoom: 19,
+    minZoom: 15,
+    maxBounds: [
+        TuftMedical, // south west
+        HarvardStadium, // north east
+        ],
+        maxBoundsViscosity: 1.0
+    }).setView(origin, 18);
+  
+  // OSM Tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 20,
+      maxNativeZoom: 20,
+  attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap Contributors</a>'
+  }).addTo(map);
+  
+  // show the scale bar on the lower left corner
+  L.control.scale({imperial: true, metric: true}).addTo(map);
+  
   const userData = await userTrail();
 
   const markerRadius = 0.5;
@@ -107,7 +118,10 @@ async function main() {
     circle.setStyle({color: pathColor});
     circle.bindPopup(`Data Point: ${username}, ${userData[1][i]}`);
   });
+
+  
 };
 
 
-main();
+main()
+.then(() => {landmarkMain()})

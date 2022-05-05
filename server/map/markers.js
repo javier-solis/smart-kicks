@@ -29,15 +29,17 @@ function onClick() {
       
 }
 
-
-const landmarksArray = locations.landmarks;
-
-for(let index=0; index<landmarksArray.length; index++){
-
-    let popupText = landmarksArray[index].name
-
-    let coord = [landmarksArray[index].lat, landmarksArray[index].lon];
-
-    const landmark = L.circle(coord, 10).bindPopup(popupText).addTo(map).on('click', onClick);
-    landmark.setStyle({color: 'red'});
+function landmarkMain() {
+  for(let index=0; index < landmarks.length; index++){
+  
+      let popupText = landmarks[index].name
+  
+      let coord = [landmarks[index].lat, landmarks[index].lon];
+  
+      const landmark = L.circle(coord, 10).bindPopup(popupText).addTo(map).on('click', onClick);
+      landmark.setStyle({color: 'red'});
+  }
 }
+
+
+
