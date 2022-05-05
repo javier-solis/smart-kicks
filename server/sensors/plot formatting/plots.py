@@ -145,6 +145,7 @@ def request_handler(request):
             plot3.yaxis.axis_label = "temperature (F)"
             plot4.yaxis.axis_label = "steps"
         
+          
             plot2.line(x, altitude, legend_label="altitude", line_dash=[4, 4], line_color="green", line_width=2)
             plot3.line(x, temperature, legend_label="temperature", line_dash=[4, 4], line_color="blue", line_width=2)
             plot4.line(stepsx, steps, legend_label="steps", line_dash=[4, 4], line_color="blue", line_width=2)

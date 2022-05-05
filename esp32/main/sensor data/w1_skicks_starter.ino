@@ -238,6 +238,35 @@ void setup() {
                   Adafruit_BMP280::FILTER_X16,      
                   Adafruit_BMP280::STANDBY_MS_500); 
   Serial.println("setup done");
+
+  sprintf(wapirequest, "GET https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cambridge, ma?unitGroup=metric&elements=pressure&include=current&key=QGXZBRL26UYTTTW9C67URDEFB&contentType=json HTTP/1.1\r\n");
+  Serial.println("hi");
+  strcat(wapirequest, "Host: weather.visualcrossing.com\r\n"); //add more to the end
+  strcat(wapirequest, "\r\n"); //add blank line!
+  Serial.println(wapirequest);
+  //submit to function that performs GET.  It will return output using response_buffer char array
+  Serial.print("check2");
+  do_https_request("weather.visualcrossing.com", wapirequest, wapiresponse, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false, Weather_CERT);
+  Serial.print("check");
+  Serial.println(wapiresponse);
+
+  DynamicJsonDocument doc1(1024);
+  char* starting1 = strchr(wapiresponse, '{');
+  char* ending1 = strrchr(wapiresponse, '}');
+  *(ending1 + 1) = NULL;
+  DeserializationError error = deserializeJson(doc1, starting1);
+  // Test if parsing succeeds.
+  if (error) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(error.f_str());
+  } 
+  else {
+      altpressure = doc1["currentConditions"]["pressure"];
+  }
+  altoffset = bmp.readAltitude(altpressure);
+  wapiresponse[0] = 0;
+
+
   timer = millis();
   elevation = 8.0;
   state = 0; //
@@ -251,7 +280,7 @@ float alty = 0;
 //use post_state for your state variable!
 void post_reporter_fsm() {
   //your code here
-if(millis() - posting_timer > POSTING_PERIOD) {
+  if(millis() - posting_timer > POSTING_PERIOD_SENSOR) {
       char body[100]; //for body
       sprintf(body,"user=%s&steps=%d",USER,steps);//generate body, posting to User, 1 step
       int body_len = strlen(body); //calculate body length (for header reporting)
@@ -302,46 +331,24 @@ void loop() {
   step_reporter_fsm(avg_acc_mag); //run step_reporter_fsm (from lab02a)
   post_reporter_fsm(); //run post_reporter_fsm (written here)
 
-  while (millis() - primary_timer < LOOP_PERIOD); //wait for primary timer to increment
+  //while (millis() - primary_timer < LOOP_PERIOD); //wait for primary timer to increment
+  //primary_timer = millis();
   // if statement
-  primary_timer = millis();
 
   temperature = bmp.readTemperature()*1.8 +32;
   pressure = bmp.readPressure();
 
   if(calibrated==0){// only run calibration if we haven't done it yet
-    sprintf(wapirequest, "GET https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cambridge, ma?unitGroup=metric&elements=pressure&include=current&key=QGXZBRL26UYTTTW9C67URDEFB&contentType=json HTTP/1.1\r\n");
-    Serial.println("hi");
-    strcat(wapirequest, "Host: weather.visualcrossing.com\r\n"); //add more to the end
-    strcat(wapirequest, "\r\n"); //add blank line!
-    Serial.println(wapirequest);
-    //submit to function that performs GET.  It will return output using response_buffer char array
-    Serial.print("check2");
-    do_https_request("weather.visualcrossing.com", wapirequest, wapiresponse, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false, Weather_CERT);
-    Serial.print("check");
-    Serial.println(wapiresponse);
-
-    DynamicJsonDocument doc1(1024);
-    char* starting1 = strchr(wapiresponse, '{');
-    char* ending1 = strrchr(wapiresponse, '}');
-    *(ending1 + 1) = NULL;
-    DeserializationError error = deserializeJson(doc1, starting1);
-    // Test if parsing succeeds.
-    if (error) {
-      Serial.print("deserializeJson() failed: ");
-      Serial.println(error.f_str());
-    } 
-    else {
-        altpressure = doc1["currentConditions"]["pressure"];
-    }
-    altoffset = bmp.readAltitude(altpressure);
-    wapiresponse[0] = 0;
-        calibrated=1;
+    
+    calibrated=1;
   }
   else{// regular height reporting every few seconds after calibration==1
     //Serial.println(altpressure);
+    if(millis() - posting_timer > POSTING_PERIOD_SENSOR) {
     altitude = bmp.readAltitude(altpressure);
-    delay(2000);
+    //posting_timer = millis();
+    }
+
   }
   
   alt_mag = altitude;
@@ -384,6 +391,8 @@ void loop() {
     strcat(brequest,body); //body
     strcat(brequest,"\r\n"); //new line
     do_http_request("608dev-2.net", brequest, bresponse, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT,true);
+    //posting_timer = millis();
+    Serial.println(bresponse);
   }
 
   Serial.println(steps);
