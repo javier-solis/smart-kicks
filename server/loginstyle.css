@@ -1,0 +1,19 @@
+h1 {
+  color: darkblue;
+}
+
+p {
+  color: rgb(16, 93, 182);
+}
+
+.loginbox {
+  color: aliceblue;
+  display: flex;
+  justify-content: center;
+}
+
+.infobox {
+  color: aliceblue;
+  display: flex;
+  justify-content: left;
+}

@@ -8,6 +8,7 @@ users = []
 loginpage = '''<!DOCTYPE html>
                 <html>
                 <head>
+                <link rel="stylesheet" href="loginstyle.css">
                 <script>
                 function setCookie(event) {
                     alert("hi");
@@ -20,12 +21,15 @@ loginpage = '''<!DOCTYPE html>
                 }
                 </script>
                 </head>
-                <h1>Sign in!</h1>
-                <p>Enter your username. Then, we'll show your stats :)</p>
+                <div id="loginbox">
+                <h1>Sign in to get started!</h1>
+                <div id="infobox"> <p>Enter your username. Then, we'll show your stats :)</p></div>
                 <form onsubmit="(e) => setCookie(e)" action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py" method="get">   
                 <label for="user">Username:</label>
                 <input type="text" id="user" name="user" />
+                <input type="submit" name="Go!" id="user"/>
                 </form>
+                </div>
                 </html>
             '''
 # redirectpage = '''<!DOCTYPE html>
