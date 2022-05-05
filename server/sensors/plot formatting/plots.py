@@ -52,9 +52,23 @@ def request_handler(request):
     # current = things[0][0]
     global current
     current = None
-    basecode = f'''
+    basecode = f'''<!DOCTYPE html>
+        <html>
+        <body>
 
-    '''
+        <h1>Pick your plot...</h1>
+        <p>Boost your way to success</p>
+              <form action="http://608dev-2.net/sandbox/sc/team44/plots.py?user={current}" method="post"> 
+          <label for="plot">I want to see my...</label>
+<select name="plot" id="plot">
+ <option value="Velocity">Velocity</option>
+ <option value="Altitude">Altitude</option>
+ <option value="Step Count">Step Count</option>
+ <option value="Temperature">Temperature</option>
+</select>
+    <input name="plot" type="submit" value="go!">
+        </form>
+'''
     # user should always be in method. if it's not, you are logged out
     if request['method'] =="GET":
         if('user' not in request['values']):
@@ -64,6 +78,7 @@ def request_handler(request):
         if(current == ''):
             # return "stop goofing"
             return redirectpage
+        return f'''{basecode} </body></html>'''
         return f'''<!DOCTYPE html>
         <html>
         <body>
@@ -162,13 +177,26 @@ def request_handler(request):
 
             
             if choice == "Velocity":
+                # return f'''{basecode}<br>
+                #         <p>Current Plot: {choice}</p>
+                #         </body>
+                #         <body>
+                #         <div id="myplot"></div>
+                #         <script>
+                #             const mainUrl="http://608dev-2.net/sandbox/sc/team44/map/main.py?velocity-json={current}";
+                #         fetch(mainUrl)
+                #             .then(function(response) {{ return response.json(); }})
+                #             .then(function(item) {{ return Bokeh.embed.embed_item(item); }})
+                #         </script>
+                #         </body>
+                #         </html>'''
                 return f'''<!DOCTYPE html>
                 <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
                 <body>
 
                         <h1>Pick your plot...</h1>
                         <p>Boost your way to success</p>
-                        <form action="http://608dev-2.net/sandbox/sc/team44/plots.py?user={current}" method="post">   
+                        <form action="http://608dev-2.net/sandbox/sc/team44/plots.py?user=Joe" method="post">   
                         <label for="plot">I want to see my...</label>
                 <select name="plot" id="plot">
             <option value="Velocity">Velocity</option>
@@ -201,6 +229,18 @@ def request_handler(request):
 
             #{current}
             elif choice == "Altitude":
+                # return f'''{basecode}
+                #             <br>
+                #             <p>Current Plot: {choice}</p>
+                #             </body>
+                #             <body>
+                #                 {div2}
+                #             </body>
+                #             {script2}
+                #             <form action="http://608dev-2.net/sandbox/sc/team44/plots.py?user={current}" method="post">
+                #                 <input type="submit" value="logout">
+                #             </form>
+                #         </html>'''
                 return f'''<!DOCTYPE html>
                 <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
                 <body>
@@ -234,6 +274,19 @@ def request_handler(request):
                 </html>
                 ''' 
             elif choice == "Step Count":
+                # return f'''{basecode}
+                #             <br>
+                #             <p>Current Plot: {choice}</p>
+                #             </body>
+                #             <body>
+                #                 {div4}
+                #             </body>
+                #             {script4}
+                #             <form action="http://608dev-2.net/sandbox/sc/team44/plots.py?user={current}" method="post">
+                #                 <input type="submit" value="logout">
+                #             </form>
+                #             </html>
+                #             '''
                 return f'''<!DOCTYPE html>
                 <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
                 <body>
@@ -267,6 +320,19 @@ def request_handler(request):
                 </html>
                 ''' 
             else:
+                # return f'''{basecode}
+                #             <br>
+                #             <p>Current Plot: {choice}</p>
+                #             </body>
+                #             <body>
+                #                 {div3}
+                #             </body>
+                #                 {script3}
+                #         <form action="http://608dev-2.net/sandbox/sc/team44/plots.py?user={current}" method="post">
+                #         <input type="submit" value="logout">
+                #         </form>
+                #         </html>
+                #             '''
                 return f'''<!DOCTYPE html>
               <html> <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
               <body>
