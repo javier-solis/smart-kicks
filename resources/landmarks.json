@@ -16,22 +16,22 @@
 
     {
         "name": "Northwest Passage",
-        "lat": 42.3601335,
-        "lon": -71.0920894,
+        "lat": 42.36018502936492,
+        "lon": -71.09187479404942,
         "description": "Northwest Passage is an installation made by Olafur Eliasson in 2018. The passage consists of ringed lights that guide one into the newly built MIT.nano building."
     },
 
     {
         "name": "Green Building",
-        "lat": 42.3603088,
-        "lon": -71.0915035,
+        "lat": 42.36035528827758,
+        "lon": -71.0892839719175,
         "description": "The Green Building (which isn't actually green!) is really shorthand for the Cecil and Ida Green Building. It's an academic building which concluded construction in 1964 and is home to MIT's Department of Earth, Atmospheric, and Planetary Sciences (EAPS). It also happens to be one of Cambridge's tallest buildings."
     },
 
     {
         "name": "Fairchild Building",
-        "lat": 42.3610837,
-        "lon": -71.0926911,
+        "lat": 42.36116810444992,
+        "lon": -71.09243685702856,
         "description": "The Fairchild Building, also known by its number as Building 38, is home to many segments of the EECS department at MIT. The 6.08 Lab is also inside of it!"
     }
 
