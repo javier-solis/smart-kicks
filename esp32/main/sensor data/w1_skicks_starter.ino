@@ -38,7 +38,7 @@ char bresponse[OUT_BUFFER_SIZE]; //char array buffer to hold HTTP request
 const int BUTTON_TIMEOUT = 500; //button timeout in milliseconds
 
 //
-const char NETWORK[] = "EECS_Labs";
+const char NETWORK[] = "MIT Guest";
 const char PASSWORD[] = "";
 
 uint8_t channel = 1; //network channel on 2.4 GHz
