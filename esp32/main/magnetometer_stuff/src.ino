@@ -2,12 +2,11 @@
 #include <WiFiClientSecure.h>
 #include <mpu9255_esp32.h>
 #include <compass.h>
-#include <TFT_eSPI.h>
 #include <ArduinoJson.h>
 #include <math.h>
 #include <string.h> //this is the line of code you are missing
 
-#include <iir.hpp>
+#include "iir.hpp"
 
 #include "LedControl.h"
 #include "binary.h"
@@ -26,9 +25,9 @@
 // char json_body[JSON_BODY_SIZE];
 
 const uint16_t RESPONSE_TIMEOUT = 6000;
-const uint16_t IN_BUFFER_SIZE = 800; //size of buffer to hold HTTP request
-const uint16_t OUT_BUFFER_SIZE = 800; //size of buffer to hold HTTP response
-const uint16_t JSON_BODY_SIZE = 800;
+const uint16_t IN_BUFFER_SIZE = 2000; //size of buffer to hold HTTP request
+const uint16_t OUT_BUFFER_SIZE = 2000; //size of buffer to hold HTTP response
+const uint16_t JSON_BODY_SIZE = 2000;
 char request[IN_BUFFER_SIZE];
 char response[OUT_BUFFER_SIZE]; //char array buffer to hold HTTP request
 char json_body[JSON_BODY_SIZE];
@@ -44,11 +43,12 @@ const int MAX_APS = 5;
 WiFiClientSecure client; //global WiFiClient Secure object
 WiFiClient client2; //global WiFiClient Secure object
 
-// const char NETWORK[] = "MIT";
-// const char PASSWORD[] = "";
-
-const char NETWORK[] = "EECS_Labs";
+const char NETWORK[] = "MIT";
 const char PASSWORD[] = "";
+
+// using a hotspot here...
+// const char NETWORK[] = "SLP-F9FD71W0LMX0";
+// const char PASSWORD[] = "bqd1nuuv3nd8d";
 
 /* Having network issues since there are 50 MIT and MIT_GUEST networks?. Do the following:
     When the access points are printed out at the start, find a particularly strong one that you're targeting.
@@ -71,7 +71,6 @@ byte bssid[] = {0xD4, 0x20, 0xB0, 0xCC, 0xDF, 0x44}; //6 byte MAC address of AP 
 
 char* SERVER = "googleapis.com";  // Server URL
 
-// TFT_eSPI tft = TFT_eSPI();
 MPU9255 imu; //imu object called, appropriately, imu
 
 Compass compass(-14.75, imu); //For Cambridge, MA area
@@ -81,7 +80,8 @@ float beta = 0.90; // 0 <= beta <= 1, increase to emphasize new values more
 float alpha = 1 - beta;
 IIR filter(alpha);
 
-float theta0 = -30;
+double theta0 = -30;
+
 
 LedControl lc = LedControl(35,36,15,1);
 byte north[9]= {B00000001,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B00000001};
@@ -93,25 +93,17 @@ byte southwest[9]= {B11111111,B10000000,B10000000,B10011000,B10011000,B10000000,
 byte northeast[9]= {B00000001,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B11111111};
 byte southeast[9]= {B10000000,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B11111111};
 
+
 void setup() {
   Serial.begin(115200); //for debugging if needed.
   delay(50); //pause to make sure comms get set up
   setup_imu();
-
-  // tft.init(); //initialize the screen
-  // tft.setRotation(3); //set rotation for our layout
-  // tft.fillScreen(TFT_BLACK);
-  // tft.setTextSize(1); //default font size
-  // tft.setTextColor(TFT_WHITE, TFT_BLACK);
-
-
 
   lc.shutdown(0,false);
   // Set brightness to a medium value
   lc.setIntensity(0,8);
   // Clear the display
   lc.clearDisplay(0);
-
 
 
   //PRINT OUT WIFI NETWORKS NEARBY
@@ -163,7 +155,7 @@ void setup() {
     ESP.restart(); // restart the ESP (proper way)
   }
 
-
+  // show_northeast();
 
   //Perform calibration routine
 
@@ -172,21 +164,9 @@ void setup() {
 
   Serial.printf("Calibrating: spin system in 360deg motions for 15s\r\n");
 
-  // tft.setCursor(0, 0);
-  // tft.println("Calibrating: spin system in 360deg motions for 15s");
-
   compass.calibrate(); //Calibrate for a set # of milliseconds
 
   Serial.printf("Compass is calibrated\r\n");
-
-  // tft.fillScreen(TFT_BLACK);
-
-  // tft.setCursor(0, 0);
-  // tft.println("Compass is calibrated                       ");
-
-  // delay(1500);
-  // tft.fillScreen(TFT_BLACK);
-
 
   filter.set(update_compass());
 
@@ -199,12 +179,17 @@ void loop() {
   double current_lat;
   double current_lon;
 
+  // Serial.println("1\r\n");
+
   int offset = sprintf(json_body, "%s", PREFIX);
   int n = WiFi.scanNetworks(); //run a new scan. could also modify to use original scan from setup so quicker (though older info)
   // Serial.println("scan done");
   if (n == 0) {
-    // Serial.println("no networks found");
-  } else {
+    Serial.println("no networks found");
+    // Serial.println("2\r\n");
+  }
+  else {
+    // Serial.println("3\r\n");
     int max_aps = max(min(MAX_APS, n), 1);
     for (int i = 0; i < max_aps; ++i) { //for each valid access point
       uint8_t* mac = WiFi.BSSID(i); //get the MAC Address
@@ -213,6 +198,8 @@ void loop() {
         offset +=sprintf(json_body+offset,",");//add comma between entries except trailing.
       }
     }
+
+    // Serial.println("4\r\n");
 
     sprintf(json_body + offset, "%s", SUFFIX);
     
@@ -224,8 +211,12 @@ void loop() {
     // Serial.println("GETing geolocation");
     // request[0] = '\0'; //set 0th byte to null
 
+    // Serial.println("5\r\n");
+
     memset(request, 0, sizeof(request));
     memset(response, 0, sizeof(response));
+
+    // Serial.println("6\r\n");
 
     offset = 0; //reset offset variable for sprintf-ing
     offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
@@ -235,16 +226,45 @@ void loop() {
     offset += sprintf(request + offset, "Content-Length: %d\r\n\r\n", len);
     offset += sprintf(request + offset, "%s\r\n", json_body);
     // do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true);
+
+    // Serial.println("7\r\n");
+
+
     do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
     // Serial.println("finished GETing geolocation");
 
+    // Serial.println("8\r\n");
+
+    // Serial.printf("%d\r\n", (int)*response);
+
+    if (!*response) {
+      Serial.printf("Empty response\r\n");
+      return;
+    }
+
+    // Serial.printf("%d\r\n", (int)*response);
+
+    // Serial.println(response);
+
     char* start = strchr(response,'{');
     char* end = strrchr(response,'}');
+
+    if (!start || !end) {
+      Serial.printf("Invalid response: does not include necessary braces");
+      return;
+    }
+
+    // Serial.printf("%s\r\n", response);
+
     *(end + 1) = NULL;
+
+    // Serial.println("9\r\n");
 
     // DynamicJsonDocument doc(5000);
     DynamicJsonDocument doc(950);
     DeserializationError error = deserializeJson(doc, start);
+
+    // Serial.println("10\r\n");
 
     if (error) {
       Serial.print(F("deserializeJson failed"));
@@ -254,43 +274,69 @@ void loop() {
     current_lat = doc["location"]["lat"];
     current_lon = doc["location"]["lng"];
 
+    // Serial.println("11\r\n");
+
     memset(request, 0, sizeof(request));
     memset(response, 0, sizeof(response));
+
+    // Serial.println("12\r\n");
+
+  
+
+
+    // Serial.printf("lat: %f, lon: %f\r\n", current_lat, current_lon);
+
+    double dest_lat = 42.3597118;
+    double dest_lon = -71.0941475;
+
+
+    offset = 0;
+    offset += sprintf(request + offset, "GET https://608dev-2.net/sandbox/sc/team44/compute_angle.py?current_lat=%f&current_lon=%f&dest_lat=%f&dest_lon=%f HTTP/1.1\r\n", current_lat, current_lon, dest_lat, dest_lon);
+    offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
+    offset += sprintf(request + offset, "\r\n");
+    do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
+    double forward_azimuth = atof(response);
+
+    // Serial.println("13\r\n");
+
+    memset(request, 0, sizeof(request));
+    memset(response, 0, sizeof(response));
+
+    // Serial.println("14\r\n");
+
+    // Serial.printf("%s\r\n", response);
+
+    double heading = update_compass();
+
+    // Serial.println("15\r\n");
+
+
+    double filtered_heading = filter.step(heading);
+
+
+    // Serial.println("16\r\n");
+
+    // Serial.printf("Heading is %f\r\n", filtered_heading);
+
+    // Serial.printf("Forward azimuth is %f\r\n", forward_azimuth);
+    double calc_angle = forward_azimuth - filtered_heading + theta0;
+
+    // Serial.println("17\r\n");
+
+
+    int actual_angle = angle_in_range(calc_angle);
+
+    // Serial.println("18\r\n");
+
+    // Serial.printf("Actual angle: %d\r\n\n", actual_angle);
+
+    set_LED_direction(actual_angle);
+
+    // Serial.println("19\r\n");
+
   }
 
-  // Serial.printf("lat: %f, lon: %f\r\n", current_lat, current_lon);
-
-  double dest_lat = 42.3597118;
-  double dest_lon = -71.0941475;
-
-
-  offset = 0;
-  offset += sprintf(request + offset, "GET https://608dev-2.net/sandbox/sc/team44/compute_angle.py?current_lat=%f&current_lon=%f&dest_lat=%f&dest_lon=%f HTTP/1.1\r\n", current_lat, current_lon, dest_lat, dest_lon);
-  offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
-  offset += sprintf(request + offset, "\r\n");
-  do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-  double forward_azimuth = atof(response);
-
-  memset(request, 0, sizeof(request));
-  memset(response, 0, sizeof(response));
-
-  // Serial.printf("%s\r\n", response);
-
-  double heading = update_compass();
-  double filtered_heading = filter.step(heading);
-
-  Serial.printf("Heading is %f\r\n", filtered_heading);
-
-  // // tft.setCursor(0, 0);
-  // // tft.printf("Heading: %.3f deg   ", heading);
-
-  Serial.printf("Forward azimuth is %f\r\n", forward_azimuth);
-  int calc_angle = forward_azimuth - filtered_heading + theta0;
-  int actual_angle = angle_in_range(calc_angle);
-
-  Serial.printf("Actual angle: %d\r\n\n", actual_angle);
-
-  set_LED_direction(actual_angle);
+  
 }
 
 float update_compass() {
@@ -304,130 +350,91 @@ int real_mod(int x, int m) {
   return (x % m + m) % m;
 }
 
-int angle_in_range(float angle) {
+int angle_in_range(double angle) {
   int rounded_angle = (int)round(angle);
   return real_mod(rounded_angle, 360);
 }
 
-void northled(){
-  lc.setRow(0,0,north[0]);
-  lc.setRow(0,1,north[1]);
-  lc.setRow(0,2,north[2]);
-  lc.setRow(0,3,north[3]);
-  lc.setRow(0,4,north[4]);
-  lc.setRow(0,5,north[5]);
-  lc.setRow(0,6,north[6]);
-  lc.setRow(0,7,north[7]);
+const int num_matrix_rows = 8;
+
+void show_north(){
+  for(int row=0; row<num_matrix_rows; row++){
+    lc.setRow(0,row,north[row]);
+  }
 }
 
-void southled(){
-  lc.setRow(0,0,south[0]);
-  lc.setRow(0,1,south[1]);
-  lc.setRow(0,2,south[2]);
-  lc.setRow(0,3,south[3]);
-  lc.setRow(0,4,south[4]);
-  lc.setRow(0,5,south[5]);
-  lc.setRow(0,6,south[6]);
-  lc.setRow(0,7,south[7]);
+
+void show_south(){
+  for(int row=0; row<num_matrix_rows; row++){
+    lc.setRow(0,row,south[row]);
+  }
 }
 
-void westled(){
-  lc.setRow(0,0,west[0]);
-  lc.setRow(0,1,west[1]);
-  lc.setRow(0,2,west[2]);
-  lc.setRow(0,3,west[3]);
-  lc.setRow(0,4,west[4]);
-  lc.setRow(0,5,west[5]);
-  lc.setRow(0,6,west[6]);
-  lc.setRow(0,7,west[7]);
+void show_west(){
+  for(int row=0; row<num_matrix_rows; row++){
+    lc.setRow(0,row,west[row]);
+  }
 }
 
-void eastled(){
-  lc.setRow(0,0,east[0]);
-  lc.setRow(0,1,east[1]);
-  lc.setRow(0,2,east[2]);
-  lc.setRow(0,3,east[3]);
-  lc.setRow(0,4,east[4]);
-  lc.setRow(0,5,east[5]);
-  lc.setRow(0,6,east[6]);
-  lc.setRow(0,7,east[7]);
-  
+
+void show_east(){
+  for(int row=0; row<num_matrix_rows; row++){
+    lc.setRow(0,row,east[row]);
+  }
 }
 
-void neled(){
-  lc.setRow(0,0,northeast[0]);
-  lc.setRow(0,1,northeast[1]);
-  lc.setRow(0,2,northeast[2]);
-  lc.setRow(0,3,northeast[3]);
-  lc.setRow(0,4,northeast[4]);
-  lc.setRow(0,5,northeast[5]);
-  lc.setRow(0,6,northeast[6]);
-  lc.setRow(0,7,northeast[7]);
+void show_northeast(){
+  for(int row=0; row<num_matrix_rows; row++){
+    lc.setRow(0,row,northeast[row]);
+  }
 }
 
-void seled(){
-  lc.setRow(0,0,southeast[0]);
-  lc.setRow(0,1,southeast[1]);
-  lc.setRow(0,2,southeast[2]);
-  lc.setRow(0,3,southeast[3]);
-  lc.setRow(0,4,southeast[4]);
-  lc.setRow(0,5,southeast[5]);
-  lc.setRow(0,6,southeast[6]);
-  lc.setRow(0,7,southeast[7]);
+void show_southeast(){
+  for(int row=0; row<num_matrix_rows; row++){
+    lc.setRow(0,row,southeast[row]);
+  }
 }
 
-void nwled(){
-  lc.setRow(0,0,northwest[0]);
-  lc.setRow(0,1,northwest[1]);
-  lc.setRow(0,2,northwest[2]);
-  lc.setRow(0,3,northwest[3]);
-  lc.setRow(0,4,northwest[4]);
-  lc.setRow(0,5,northwest[5]);
-  lc.setRow(0,6,northwest[6]);
-  lc.setRow(0,7,northwest[7]);
+void show_northwest(){
+  for(int row=0; row<num_matrix_rows; row++){
+    lc.setRow(0,row,northwest[row]);
+  }
 }
 
-void swled(){
-  lc.setRow(0,0,southwest[0]);
-  lc.setRow(0,1,southwest[1]);
-  lc.setRow(0,2,southwest[2]);
-  lc.setRow(0,3,southwest[3]);
-  lc.setRow(0,4,southwest[4]);
-  lc.setRow(0,5,southwest[5]);
-  lc.setRow(0,6,southwest[6]);
-  lc.setRow(0,7,southwest[7]);
-
+void show_southwest(){
+  for(int row=0; row<num_matrix_rows; row++){
+    lc.setRow(0,row,southwest[row]);
+  }
 }
+
+
 
 void set_LED_direction(int angle) {
   if ((angle <= 22.5) || (angle > 337.5)){
-    northled();
+    show_north();
   }
   else if ((angle > 22.5) && (angle <= 67.5)){
-    neled();
+    show_northeast();
   }
   else if ((angle > 67.5) && (angle <= 112.5)){
-    eastled();
+    show_east();
   }
   else if ((angle > 112.5) && (angle <= 157.5)){
-    seled();
+    show_southeast();
   }
   else if ((angle > 157.5) && (angle <= 202.5)){
-    southled();
+    show_south();
   }
   else if ((angle > 202.5) && (angle <= 247.5)){
-    swled();
+    show_southwest();
   }
   else if ((angle > 247.5) && (angle <= 292.5)){
-    westled();
+    show_west();
   }
-  else{
-    nwled();
-  }
+  // else{
+  //   show_northeast();
+  // }
+
+
+
 }
-
-
-
-
-
-
