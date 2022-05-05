@@ -9,7 +9,7 @@ START_LAT=42.3591871
 START_LON=-71.0931501
 # (Represents MIT's Lobby 7 Location)
 
-DELTA_TIME=0.1 # in seconds
+DELTA_TIME=0.01 # in seconds
 
 # With both of these combined, I'm saying that people walk at 1.11m/sec, roughly the average walking speed
 DELTA_DIST_M=5 # in meters

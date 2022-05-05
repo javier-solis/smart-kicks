@@ -1,31 +1,10 @@
 const TuftMedical= [42.349566, -71.064458];
 const HarvardStadium = [42.366754, -71.126513];
 
-// let locations = {
-//   "landmarks": [{
-//       "name": "Lobby 7",
-//       "lat": 42.3591871,
-//       "lon": -71.0931501,
-//       "description": "Idk 1"
-//       },
-//       {
-//       "name": "Lobby 10",
-//       "lat": 42.35949364379263,
-//       "lon": -71.09190495832806,
-//       "description": "Idk 2"
-//       } 
-//   ]    
-// }
-
 
 const mainAddr = "http://608dev-2.net/sandbox/sc/team44/map/";
 const serverFileMain = "main.py";
 const serverFileLandmarks = "landmarks.py";
-
-
-
-
-// Ideally, the above should be stored in a .json file, but thats been a bit finacky
 
 //======================
 
@@ -54,14 +33,10 @@ function getOrigin() {
   return [lat_lon.lat, lat_lon.lon];;
 }
 
-// Main Config
-
-
 
 // Retrieving Specific User Data
 
 const username = getParamValue("user")
-
 
 async function userTrail() {
   const query = "?trail-map="+username;

@@ -6,13 +6,14 @@ from typing import *
 import numpy as np
 import sys
 
-from sympy import sring
 from bokeh.plotting import figure
 from bokeh.embed import json_item
 
 # ==
 
-# Importing Functions From Other Python Files
+# Importing Functions From Other Files
+landmarks_file = '/var/jail/home/team44/server/map/landmarks.json'
+
 sys.path.append('/var/jail/home/team44/map/')
 from geo_funcs import *
 
@@ -30,7 +31,7 @@ degPrecision = 6 # storing at most 6 decimal places, because that's the best acc
 distPrecision = 1 # at most 0.1 meters
 timePrecision = 0 # round to nearest second
 
-# Locations
+# Corner Locations
 TuftMedical= (42.34956664091039, -71.06445822683442)
 HarvardStadium = (42.36675464638942, -71.12651381366604)
 
@@ -108,10 +109,8 @@ def get_now_time() -> int:
     """
     return int(datetime.now().timestamp())
 
-def convert_unix_to_est(unix_time: int)-> str:
+def convert_unix_to_utc(unix_time: int)-> str:
     return datetime.utcfromtimestamp(unix_time).strftime(time_format)
-
-    return "lol"
 
 # ==
 
@@ -123,10 +122,15 @@ def get_data(GET_type: str, user: str) -> str:
         with sqlite3.connect(current_db) as c:
             row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? ORDER BY timing DESC;''', (user,)).fetchone()
         
-        if row==None:
+        if row==None: # This should never occur, else ESP32 will freak out
             return "User has never chosen a landmark."
+        else:
+            landmark_name = row[0]
 
-        return row[0]
+            f = open(landmarks_file)
+            data = json.load(f)
+
+            return str(data[landmark_name]["lat"])+","+str(data[landmark_name]["lon"])
 
 
     one_hour_ago: int = get_now_time() - 60*60
@@ -153,12 +157,11 @@ def get_data(GET_type: str, user: str) -> str:
         
         return html_render
 
-
     elif GET_type == get_request.vel_tables: # for now, showing the latest 1 hour
         with sqlite3.connect(current_db) as c:
             allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (user, one_hour_ago)).fetchall()
 
-        html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time Delta (s)", "Distance Delta (m)", "Time (Unix)"), allRows)
+        html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time (Unix)"), allRows)
         
         return html_render
 
@@ -228,7 +231,6 @@ def request_handler(request) -> str:
                 c.execute('''INSERT into bad_loc_data VALUES (?, ?)''', (lat, lon))
 
                 return "Error: lat and/or lon are outside of MIT's boundaries"
-
 
             user_exists = c.execute('''SELECT * FROM all_users WHERE user=?''', (user,)).fetchone()
         
