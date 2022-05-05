@@ -97,9 +97,9 @@ def request_handler(request):
         now = datetime.datetime.now()
         conn = sqlite3.connect(example_db)
         c = conn.cursor()
-        plot2 = figure()
-        plot3 = figure()
-        plot4 = figure()
+        plot2 = figure(x_axis_type='datetime')
+        plot3 = figure(x_axis_type='datetime')
+        plot4 = figure(x_axis_type='datetime')
         x = []
         pressure = []
         temperature = []
