@@ -33,7 +33,7 @@ uint32_t primary_timer = 0;
 uint32_t posting_timer = 0;
 uint32_t step_timer = 0;
 float x, y, z; //variables for grabbing x,y,and z values
-const char USER[] = "yubzak";
+const char USER[] = "waly";
 
 //Some constants and some resources:
 const int RESPONSE_TIMEOUT = 6000; //ms to wait for response from host
