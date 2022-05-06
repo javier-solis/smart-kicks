@@ -1,5 +1,7 @@
 import sqlite3
 from datetime import datetime, timedelta
+# import datetime
+from bokeh.models.formatters import DatetimeTickFormatter
 import json
 from typing import *
 # from xmlrpc.client import DateTime
@@ -98,10 +100,10 @@ def check_in_bounds(coord: Tuple[float, float]):
     return (top_left[1] < coord[1] and coord[0] < top_left[0] and \
             coord[1] < bot_right[1] and bot_right[0] < coord[0])
 
-def make_datatime_object(unix_time: int) -> datetime: # seems a litle complex but im not sure what else to do
+# def make_datatime_object(unix_time: int) -> datetime: # seems a litle complex but im not sure what else to do
 
-    # or can this be a string and the graphs x axis will take it in happily
-    return datetime.strptime( datetime.utcfromtimestamp(unix_time)) 
+#     # or can this be a string and the graphs x axis will take it in happily
+#     return datetime.strptime( datetime.utcfromtimestamp(unix_time)) 
 
 def get_now_time() -> int:
     """
@@ -193,11 +195,16 @@ def get_data(GET_type: str, user: str) -> str:
             consec_vel.append(float(row[1]))
             avg_vel.append(float(row[2]))
 
-            time_slice = make_datatime_object(row[3])
+            # time_slice = make_datatime_object(row[3])
+            # time.append(time_slice)
+            # time_slice = datetime.strptime(datetime.utcfromtimestamp(row[3]),'%Y-%m-%d %H:%M:%S.%f')
+            time_slice = datetime.utcfromtimestamp(row[3])
             time.append(time_slice)
 
         # Week 4: make the graph more colorful/visually pleasing
-        plot.line(time, consec_vel, legend_label="Consecutive Velocity", line_color="orange", line_width=2, )
+        plot.xaxis.formatter = DatetimeTickFormatter(minsec = ['%H:%M:%S'])
+        plot.line(time, consec_vel, legend_label="Consecutive Velocity", line_color="orange", line_width=2)
+        # plot.line(time, consec_vel, legend_label="Consecutive Velocity", line_color="orange", line_width=2, )
         plot.line(time, avg_vel, legend_label="Average Velocity", line_color="green", line_width=2)
 
         return json.dumps(json_item(plot, "myplot"))
