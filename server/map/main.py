@@ -14,7 +14,7 @@ from bokeh.embed import json_item
 # ==
 
 # Importing Functions From Other Files
-landmarks_file = '/var/jail/home/team44/server/map/landmarks.json'
+landmarks_file = '/var/jail/home/team44/map/landmarks.json'
 
 sys.path.append('/var/jail/home/team44/map/')
 from geo_funcs import *
@@ -125,14 +125,16 @@ def get_data(GET_type: str, user: str) -> str:
             row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? ORDER BY timing DESC;''', (user,)).fetchone()
         
         if row==None: # This should never occur, else ESP32 will freak out
-            return "User has never chosen a landmark."
+            return "42.3592057337819,-71.09316160376488" # lobby 7 as a default
         else:
             landmark_name = row[0]
 
             f = open(landmarks_file)
             data = json.load(f)
 
-            return str(data[landmark_name]["lat"])+","+str(data[landmark_name]["lon"])
+            for landmark in data:
+                if landmark["name"]==landmark_name:
+                    return str(landmark["lat"])+","+str(landmark["lon"])
 
 
     one_hour_ago: int = get_now_time() - 60*60
@@ -212,7 +214,7 @@ def get_data(GET_type: str, user: str) -> str:
     else:
         return "Error."
 
-# ==
+# ==========================================
 
 def request_handler(request) -> str:
     one_hour_ago: int = get_now_time() - 60*60

@@ -54,8 +54,18 @@ async function userTrail() {
 let landmarks;
 let map;
 
+
+
+async function getPrevDestination() {
+  return fetch('http://608dev-2.net/sandbox/sc/team44/map/main.py?destination='+username)
+  .then(res => res.text());
+}
+
+
+
 async function main() {
   landmarks = await getLandmarks();
+
   const origin = getOrigin();
 
   map = L.map('map', {
@@ -94,7 +104,11 @@ async function main() {
     circle.bindPopup(`Data Point: ${username}, ${userData[1][i]}`);
   });
 
-  
+  // last user destination
+
+  let prevDestination = await getPrevDestination();
+  updateDescription(prevDestination);
+
 };
 
 

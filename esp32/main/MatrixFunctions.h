@@ -9,5 +9,6 @@ void throbber_animation();
 void blinking_center_animation();
 void initialize_matrix();
 void set_LED_direction(int angle);
+void show_border();
 
 #endif
