@@ -158,7 +158,7 @@ char* SERVER = "googleapis.com";  // Server URL
 // const char PASSWORD[] = "bqd1nuuv3nd8d";
 
 const char NETWORK[] = "806net";
-const char PASSWORD[] = "fuckyoumax";
+const char PASSWORD[] = "kfhe94jcmshfkr";
 
 // === WiFi Extras ===
 
@@ -353,7 +353,7 @@ void sendLocation(Coord current_location) {
 /**
 * Get the last landmark that the user selected on the website.
 */
-Coord getDestination() {
+void get_destination() {
 
 
   request[0]='\0';
@@ -370,7 +370,9 @@ Coord getDestination() {
   Serial.println(response);
   if (!*response) {
     Serial.println("Empty response");
-    return make_error_coord();
+    destination = make_error_coord();
+
+    return;
   }
 
   char* ptr = strtok(response, ",");
@@ -381,12 +383,11 @@ Coord getDestination() {
   memset(request, 0, sizeof(request));
   memset(response, 0, sizeof(response));
 
-  Coord destination;
   destination.lat = dest_lat;
   destination.lon = dest_lon;
   destination.error = 0;
 
-  return destination;
+  // return destination;
 
 }
 
@@ -407,7 +408,7 @@ bool on_off_check(){
       show_center();
       Serial.println(55555);
 
-      Coord destination = getDestination();
+      get_destination();
       Serial.println(666666);
 
       Serial.println("Powered on");
