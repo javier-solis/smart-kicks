@@ -2,11 +2,8 @@ let previous;
 
 function updateDescription(name){
   let all = getJSONGroup(landmarks, "name", name);
-  console.log(all);
-  document.getElementById("currentDestination").innerHTML = name+"<br>" + all.description;
+  document.getElementById("currentDestination").innerHTML = name + "<br>" + all.description;
 }
-
-
 
 function onClick() {
 
@@ -40,6 +37,7 @@ function onClick() {
 }
 
 function landmarkMain() {
+
   for(let index=0; index < landmarks.length; index++){
   
       let popupText = landmarks[index].name

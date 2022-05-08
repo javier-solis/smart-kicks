@@ -36,7 +36,7 @@ loginpage = '''<!DOCTYPE html>
             '''
 # redirectpage = '''<!DOCTYPE html>
 #                 <html>
-#                 <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/plots.py?user={}" />
+#                 <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/sensors/plots.py?user={}" />
 #                 </html>
 #             '''.format(cookiename)
 # cookiesjs = '''function setCookie(cname, cvalue, exdays) {
