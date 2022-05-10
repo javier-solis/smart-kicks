@@ -1,5 +1,10 @@
 let previous;
 
+function updateDescription(name){
+  let all = getJSONGroup(landmarks, "name", name);
+  document.getElementById("currentDestination").innerHTML = name + "<br>" + all.description;
+}
+
 function onClick() {
 
     const postURL = mainAddr+serverFileLandmarks;
@@ -11,6 +16,8 @@ function onClick() {
     this.setStyle({color: 'purple'});
 
     const landmarkName = this.getPopup().getContent();
+
+    updateDescription(landmarkName);
 
     fetch(postURL, {
         method: 'POST',
@@ -26,10 +33,11 @@ function onClick() {
       .catch(err => {
         console.log('Failed to POST. Error message:', err);
       });
-      
+  
 }
 
 function landmarkMain() {
+
   for(let index=0; index < landmarks.length; index++){
   
       let popupText = landmarks[index].name

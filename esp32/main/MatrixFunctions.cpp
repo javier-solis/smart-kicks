@@ -10,8 +10,8 @@ const int HALF_SEC = 500;
 const int TENTH_SEC = 100;
 
 // Timers
-
 uint32_t blink_timer = 0; // Used for all animations, for now
+
 
 // === Initiation & Config Variables ===
 
@@ -23,32 +23,104 @@ void initialize_matrix(){
   lc.clearDisplay(0);
 }
 
-const int num_matrix_rows = 8;
-
+const int matrix_rows = 8;
 
 // === Byte Arrays, Variables, and "Bitmaps" Used to Represent Content on the Matrix ===
 
-byte center_bitmap[num_matrix_rows]= {B00000000,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B00000000};
+byte center_bitmap[matrix_rows]= {B00000000,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B00000000};
 
 byte off_value = B00000000;
-
 
 byte throbber_left = B00010000;
 byte throbber_right = B00001000;
 
+byte N_bitmap[matrix_rows]= {B00000001,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B00000001};
+byte S_bitmap[matrix_rows]= {B10000000,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B10000000};
+byte E_bitmap[matrix_rows]= {B00000000,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B11111111};
+byte W_bitmap[matrix_rows]= {B11111111,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B00000000};
+byte NE_bitmap[matrix_rows]= {B11111111,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B00000001};
+byte SW_bitmap[matrix_rows]= {B11111111,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B10000000};
+byte NW_bitmap[matrix_rows]= {B00000001,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B11111111};
+byte SE_bitmap[matrix_rows]= {B10000000,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B11111111};
+
+byte border_bitmap[matrix_rows]= {B11111111,B10000001,B10000001,B10000001,B10000001,B10000001,B10000001,B11111111};
+
 
 // === Static Displays ===
 void show_center(){
-  for(int row=0; row<num_matrix_rows; row++){
+  for(int row=0; row<matrix_rows; row++){
       lc.setRow(0,row, center_bitmap[row]);
   }
 }
 
 void clear_matrix(){
-  for(int row=0; row<num_matrix_rows; row++){
+  for(int row=0; row<matrix_rows; row++){
       lc.setRow(0,row, off_value);
   }
 }
+
+void show_border(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,border_bitmap[row]);
+  }
+}
+
+
+void show_north(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,N_bitmap[row]);
+  }
+}
+
+void show_south(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,S_bitmap[row]);
+  }
+}
+
+void show_west(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,W_bitmap[row]);
+  }
+}
+
+
+void show_east(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,E_bitmap[row]);
+  }
+}
+
+void show_northeast(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,NE_bitmap[row]);
+  }
+}
+
+void show_southeast(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,SE_bitmap[row]);
+  }
+}
+
+void show_northwest(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,NW_bitmap[row]);
+  }
+}
+
+void show_southwest(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,SW_bitmap[row]);
+  }
+}
+
+void show_square(){
+  for(int row=0; row<matrix_rows; row++){
+    lc.setRow(0,row,border_bitmap[row]);
+  }
+}
+
 
 // === Animations ===
 
@@ -87,71 +159,7 @@ void blinking_center_animation(){
   }
 }
 
-
-
-
-// Code for setting LEDs with angle
-
-byte north[9]= {B00000001,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B00000001};
-byte south[9]= {B10000000,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B10000000};
-byte east[9]= {B00000000,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B11111111};
-byte west[9]= {B11111111,B00000000,B00000000,B00011000,B00011000,B00000000,B00000000,B00000000};
-byte northwest[9]= {B11111111,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B00000001};
-byte southwest[9]= {B11111111,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B10000000};
-byte northeast[9]= {B00000001,B00000001,B00000001,B00011001,B00011001,B00000001,B00000001,B11111111};
-byte southeast[9]= {B10000000,B10000000,B10000000,B10011000,B10011000,B10000000,B10000000,B11111111};
-
-void show_north(){
-  for(int row=0; row<num_matrix_rows; row++){
-    lc.setRow(0,row,north[row]);
-  }
-}
-
-
-void show_south(){
-  for(int row=0; row<num_matrix_rows; row++){
-    lc.setRow(0,row,south[row]);
-  }
-}
-
-void show_west(){
-  for(int row=0; row<num_matrix_rows; row++){
-    lc.setRow(0,row,west[row]);
-  }
-}
-
-
-void show_east(){
-  for(int row=0; row<num_matrix_rows; row++){
-    lc.setRow(0,row,east[row]);
-  }
-}
-
-void show_northeast(){
-  for(int row=0; row<num_matrix_rows; row++){
-    lc.setRow(0,row,northeast[row]);
-  }
-}
-
-void show_southeast(){
-  for(int row=0; row<num_matrix_rows; row++){
-    lc.setRow(0,row,southeast[row]);
-  }
-}
-
-void show_northwest(){
-  for(int row=0; row<num_matrix_rows; row++){
-    lc.setRow(0,row,northwest[row]);
-  }
-}
-
-void show_southwest(){
-  for(int row=0; row<num_matrix_rows; row++){
-    lc.setRow(0,row,southwest[row]);
-  }
-}
-
-
+// === Configurable Displays ===
 
 void set_LED_direction(int angle) {
   if ((angle <= 22.5) || (angle > 337.5)){

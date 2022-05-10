@@ -54,8 +54,28 @@ async function userTrail() {
 let landmarks;
 let map;
 
+function getStatsLink(){
+  let link = document.getElementById("statsLink");
+  link.setAttribute("href", mainAddr+serverFileMain+"?trail-table="+username);
+}
+
+async function firstTimeDesc(name){
+  const response = await fetch(mainAddr+serverFileMain+"?web_destination="+username)
+
+  if(response.status===200){ //succesfull GET
+    const text = await response.text();
+    document.getElementById("currentDestination").innerHTML = text;;
+  }
+}
+
+let prevDestination;
+
 async function main() {
+
+  getStatsLink();
+
   landmarks = await getLandmarks();
+
   const origin = getOrigin();
 
   map = L.map('map', {
@@ -94,9 +114,9 @@ async function main() {
     circle.bindPopup(`Data Point: ${username}, ${userData[1][i]}`);
   });
 
-  
+  await firstTimeDesc();
 };
 
 
-main()
-.then(() => {landmarkMain()})
+main().then(() => {landmarkMain()});
+

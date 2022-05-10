@@ -74,7 +74,7 @@ def request_handler(request):
             redirectpage = '''<!DOCTYPE html>
                 <html>
 
-                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/plots.py?user={}" />
+                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/sensors/plots.py?user={}" />
                 <script>
                     document.cookie = "";
                 </script>
@@ -86,7 +86,7 @@ def request_handler(request):
             redirectpage = '''<!DOCTYPE html>
                 <html>
 
-                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44//map/index.html?user={}" />
+                <meta http-equiv="refresh" content="0; URL=http://608dev-2.net/sandbox/sc/team44/map/index.html?user={}" />
 
                 <script>
                     document.cookie = "";

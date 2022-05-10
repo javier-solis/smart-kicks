@@ -11,6 +11,9 @@ import sys
 from bokeh.plotting import figure
 from bokeh.embed import json_item
 
+from bokeh.palettes import RdBu
+from bokeh.transform import linear_cmap
+
 # ==
 
 # Importing Functions From Other Files
@@ -50,8 +53,11 @@ class GetRequestTypes():
         self.trail_table="trail-table"
         self.trail_json="trail-map"
         self.destination="destination"
-        self.vel_tables="velocity-tables"
+        self.vel_table="velocity-table"
         self.vel_json="velocity-json"
+        self.vel_graph="velocity-graph"
+        self.web_destination="web_destination"
+
     
     def all_members(self) -> set:
         mapping = vars(self)
@@ -111,6 +117,7 @@ def get_now_time() -> int:
     """
     return int(datetime.now().timestamp())
 
+
 def convert_unix_to_utc(unix_time: int)-> str:
     return datetime.utcfromtimestamp(unix_time).strftime(time_format)
 
@@ -125,7 +132,7 @@ def get_data(GET_type: str, user: str) -> str:
             row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? ORDER BY timing DESC;''', (user,)).fetchone()
 
         if row==None: # This should never occur, else ESP32 will freak out
-            return "User has never chosen a landmark."
+            return "42.3592057337819,-71.09316160376488" # lobby 7 as a default
         else:
             landmark_name = row[0]
 
@@ -139,18 +146,50 @@ def get_data(GET_type: str, user: str) -> str:
 
     one_hour_ago: int = get_now_time() - 60*60
 
-    # === Mostly used by web-browser for debugging or the curious ===
+    # === Quick Checks ===
+
+    # Checking that a valid GET request name was given
+    if not get_request.includes(GET_type):
+        return "Invalid request name."
+
 
     # Checking that the user has ever collected data.
     with sqlite3.connect(current_db) as c:
         userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (user,)).fetchone()
 
-    if(not userExistsCheck[0]):
+    if(not userExistsCheck[0]): # Handling the cases where the user has never collected any data or destination differently
+        
+        if GET_type == get_request.trail_json:
+            output = {"locations": [], "timing": []}
+            return json.dumps(output)
+
+
+        elif GET_type == get_request.web_destination:
+            return "You have not selected any! Please choose one :)"
+
+
         return "User has not collected any data."
 
-    # Checking that a valid GET request name was given
-    if not get_request.includes(GET_type):
-        return "Invalid request name."
+
+    if GET_type == get_request.vel_graph:
+        return f"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <script src="https://cdn.bokeh.org/bokeh/release/bokeh-2.4.0.min.js"></script>
+        </head>
+        <body>
+        <div id="myplot"></div>
+
+        <script>
+            const mainUrl="http://608dev-2.net/sandbox/sc/team44/map/main.py?velocity-json={user}";
+
+        fetch(mainUrl)
+            .then(function(response) {{ return response.json(); }})
+            .then(function(item) {{ return Bokeh.embed.embed_item(item); }})
+        </script>
+        </body>
+        """
 
     if GET_type == get_request.trail_table:
 
@@ -161,9 +200,11 @@ def get_data(GET_type: str, user: str) -> str:
         
         return html_render
 
-    elif GET_type == get_request.vel_tables: # for now, showing the latest 1 hour
+    elif GET_type == get_request.vel_table: # for now, showing the latest 1 hour
         with sqlite3.connect(current_db) as c:
             allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing > ?''', (user, one_hour_ago)).fetchall()
+
+        true_render = [row[:-1].append(convert_unix_to_utc(row[-1])) for row in allRows]
 
         html_render = make_html_table(("User", "Consecutive Velocity (m/s)", "Average Velocity (m/s)", "Time (Unix)"), allRows)
         
@@ -182,12 +223,29 @@ def get_data(GET_type: str, user: str) -> str:
 
             return json.dumps(output)
 
+    elif GET_type == get_request.web_destination:
+        with sqlite3.connect(current_db) as c:
+            row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? ORDER BY timing DESC;''', (user,)).fetchone()
+        
+        if row==None: # This should never occur, else ESP32 will freak out
+            return "Lobby 7" # lobby 7 as a default
+        else:
+            landmark_name = row[0]
+
+            f = open(landmarks_file)
+            data = json.load(f)
+
+            for landmark in data:
+                if landmark["name"]==landmark_name:
+                    return landmark_name+"<br>"+landmark["description"]
+
+
     elif GET_type == get_request.vel_json:
         with sqlite3.connect(current_db) as c:
             allRows = c.execute('''SELECT * FROM vel_data WHERE user=? AND timing>? ORDER by timing ASC''', (user, one_hour_ago)).fetchall()
 
         plot = figure(x_axis_label="Time (s)", y_axis_label="Velocity (m/s)", x_axis_type='datetime')
-        # plot.xaxis.()
+        plot.xaxis.formatter = DatetimeTickFormatter(minsec = ['%H:%M:%S'])
 
         time: List[datetime] = []
         consec_vel: List[float] = []
@@ -197,24 +255,28 @@ def get_data(GET_type: str, user: str) -> str:
             consec_vel.append(float(row[1]))
             avg_vel.append(float(row[2]))
 
-            # time_slice = make_datatime_object(row[3])
-            # time.append(time_slice)
-            # time_slice = datetime.strptime(datetime.utcfromtimestamp(row[3]),'%Y-%m-%d %H:%M:%S.%f')
             time_slice = datetime.utcfromtimestamp(row[3])
             time.append(time_slice)
 
-        # Week 4: make the graph more colorful/visually pleasing
-        plot.xaxis.formatter = DatetimeTickFormatter(minsec = ['%H:%M:%S'])
         plot.line(time, consec_vel, legend_label="Consecutive Velocity", line_color="orange", line_width=2)
-        # plot.line(time, consec_vel, legend_label="Consecutive Velocity", line_color="orange", line_width=2, )
         plot.line(time, avg_vel, legend_label="Average Velocity", line_color="green", line_width=2)
 
+        # create linear color mapper
+        consec_vel_mapper = linear_cmap(field_name="y", palette=RdBu[11], low=min(consec_vel), high=max(consec_vel))
+        avg_vel_mapper = linear_cmap(field_name="y", palette=RdBu[11], low=min(avg_vel), high=max(avg_vel))
+
+        # create circle renderer with color consec_vel_mapper
+        plot.circle(time, consec_vel, fill_color=consec_vel_mapper, line_color="orange", size=8)
+        plot.circle(time, avg_vel, fill_color=avg_vel_mapper, line_color="green", size=8)
+
         return json.dumps(json_item(plot, "myplot"))
+
+
 
     else:
         return "Error."
 
-# ==
+# ==========================================
 
 def request_handler(request) -> str:
     one_hour_ago: int = get_now_time() - 60*60
@@ -275,10 +337,10 @@ def request_handler(request) -> str:
                     avg_vel: float = total_distance/total_time
                     consec_vel: float
                     
-                    if time_delta==0:
-                        consec_vel = 0
-                    else:
-                        consec_vel = distDelta/time_delta
+                    # if time_delta==0:
+                    #     consec_vel = 0
+                    # else:
+                    consec_vel = distDelta/time_delta
 
                     c.execute('''INSERT into loc_data VALUES (?, ?, ?, ?, ?, ?)''', (user, lat, lon, distDelta, time_delta, get_now_time()))
                     c.execute('''INSERT into vel_data VALUES (?, ?, ?, ?)''', (user, consec_vel, avg_vel, get_now_time()))
