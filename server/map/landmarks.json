@@ -39,5 +39,12 @@
         "lat": 42.36116810444992,
         "lon": -71.09243685702856,
         "description": "The Fairchild Building, also known by its number as Building 38, is home to many segments of the EECS department at MIT. The 6.08 Lab is also inside of it!"
+    },
+
+    {
+        "name": "Next House",
+        "lat": 42.35504215308147,
+        "lon": -71.10160891297032,
+        "description": "Insert description"
     }
 ]

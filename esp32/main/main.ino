@@ -163,7 +163,7 @@ float beta = 0.90; // 0 <= beta <= 1, increase to emphasize new values more
 float alpha = 1 - beta;
 IIR filter(alpha);
 
-double theta0 = -45; // Offset to account for positioning of the magnetometer on the board, etc.
+double theta0 = -45.0; // Offset to account for positioning of the magnetometer on the board, etc.
 
 
 Coord getLocation() {
@@ -311,6 +311,8 @@ Coord getDestination() {
     Serial.println("Empty response");
     return make_error_coord();
   }
+
+  Serial.printf("Response is: %s\r\n", response);
 
   char* ptr = strtok(response, ",");
   double dest_lat = atof(ptr);
