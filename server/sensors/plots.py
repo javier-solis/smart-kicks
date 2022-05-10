@@ -75,9 +75,15 @@ def request_handler(request):
  <option value="Step Count">Step Count</option>
  <option value="Temperature">Temperature</option>
 </select>
-<br>
-<br>
-    <input type="submit">
+
+    <input type="submit" value="see data!">
+    <br>
+        <form action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py?user={current}" method="post">
+        <input type="submit" value="go home!">
+        </form> 
+        </form>
+        <form action="http://608dev-2.net/sandbox/sc/team44/sensors/plots.py?user={current}" method="post">
+        <input type="submit" value="logout!">
         </form>
         </body>
         </html>
@@ -114,9 +120,10 @@ def request_handler(request):
             # things = c.execute('''SELECT pres, alt, temp, timing FROM sk_table WHERE user = ? ORDER by timing ASC;''',(USERS[i],)).fetchall()
             things = c.execute('''SELECT pres, alt, temp, timing FROM sk_table WHERE user = ? ORDER by timing DESC LIMIT 1000;''', (current,)).fetchall()
             print(things)
+            size1 = len(things)
             index = 0
             for row in things:
-                if(index % 100 != 0):
+                if(index % 500 != 0):
                     index += 1
                     continue
                 # print(row)
@@ -135,8 +142,10 @@ def request_handler(request):
             nc = nconn.cursor()
             stepThing = nc.execute('''SELECT steps, timing FROM steps_table WHERE user = ? ORDER by timing DESC LIMIT 1000;''', (current,)).fetchall()
             step_index = 0
+            size2 = len(stepThing)
+            # return "size1: " + str(size1) + " size2: " + str(size2)
             for row in stepThing:
-                if(step_index % 100 != 0):
+                if(step_index % 500 != 0):
                     index += 1
                     continue
                 if row[0] is None:
@@ -183,15 +192,18 @@ def request_handler(request):
             <option value="Step Count">Step Count</option>
             <option value="Temperature">Temperature</option>
                 </select>
-                <br>
-                <br>
                         
-                        <input type="submit">
+                        <input type="submit" value="see data!">
                         </form>
     <br>
     <p>Current Plot: {choice}</p>
                         </body>
-                        
+        <form action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py?user={current}" method="post">
+        <input type="submit" value="go home!">
+        </form> 
+        <form action="http://608dev-2.net/sandbox/sc/team44/sensors/plots.py?user={current}" method="post">
+        <input type="submit" value="logout!">
+        </form> 
                     <body>
 
     <div id="myplot"></div>
@@ -224,10 +236,8 @@ def request_handler(request):
         <option value="Step Count">Step Count</option>
         <option value="Temperature">Temperature</option>
                 </select>
-                <br>
-                <br>
                         
-                        <input type="submit">
+                        <input type="submit" value="see data!">
                         </form>
 
     <br>
@@ -239,8 +249,11 @@ def request_handler(request):
                     {div2}
                 </body>
                     {script2}
+        <form action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py?user={current}" method="post">
+        <input type="submit" value="go home!">
+        </form> 
         <form action="http://608dev-2.net/sandbox/sc/team44/sensors/plots.py?user={current}" method="post">
-        <input type="submit">
+        <input type="submit" value="logout!">
         </form>
                 </html>
                 ''' 
@@ -259,10 +272,8 @@ def request_handler(request):
         <option value="Step Count">Step Count</option>
         <option value="Temperature">Temperature</option>
                 </select>
-                <br>
-                <br>
                         
-                        <input type="submit">
+                        <input type="submit" value="see data!">
                         </form>
 
     <br>
@@ -274,8 +285,11 @@ def request_handler(request):
                     {div4}
                 </body>
                     {script4}
+        <form action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py?user={current}" method="post">
+        <input type="submit" value="go home!">
+        </form> 
         <form action="http://608dev-2.net/sandbox/sc/team44/sensors/plots.py?user={current}" method="post">
-        <input type="submit">
+        <input type="submit" value="logout!">
         </form>
                 </html>
                 ''' 
@@ -294,10 +308,8 @@ def request_handler(request):
       <option value="Step Count">Step Count</option>
       <option value="Temperature">Temperature</option>
             </select>
-            <br>
-            <br>
                       
-                      <input type="submit">
+                      <input type="submit" value="see data!">
                     </form>
 <br>
 <p>Current Plot: {choice}</p>
@@ -307,8 +319,11 @@ def request_handler(request):
                   {div3}
               </body>
                   {script3}
+        <form action="http://608dev-2.net/sandbox/sc/team44/intermediate_page.py?user={current}" method="post">
+        <input type="submit" value="go home!">
+        </form> 
         <form action="http://608dev-2.net/sandbox/sc/team44/sensors/plots.py?user={current}" method="post">
-        <input type="submit">
+        <input type="submit" value="logout!">
         </form>
               </html>
               ''' 
