@@ -110,8 +110,11 @@ bool powered_off = true;
 
 
 
-// === Variables For Landmark Getting ===
+// === Variables For Landmark Getting, and angle calculations ===
 Coord destination;
+Coord current_location;
+double forward_azimuth;
+double proximity;
 
 // === WiFi Variables ===
 const uint16_t RESPONSE_TIMEOUT = 6000;
@@ -304,9 +307,6 @@ Coord getLocation() {
     double latitude = doc["location"]["lat"];
     double longitude = doc["location"]["lng"];
 
-    memset(request, 0, sizeof(request));
-    memset(response, 0, sizeof(response));
-
     Coord location;
     location.lat = latitude;
     location.lon = longitude;
@@ -337,7 +337,6 @@ void sendLocation(Coord current_location) {
   memset(response, 0, sizeof(response));
 
   int offset = 0;
-
   offset += sprintf(request + offset, "POST /sandbox/sc/team44/map/main.py HTTP/1.1\r\n");
   offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
   offset += sprintf(request + offset, "Content-Type: application/x-www-form-urlencoded\r\n");
@@ -353,11 +352,11 @@ void sendLocation(Coord current_location) {
 /**
 * Get the last landmark that the user selected on the website.
 */
-void get_destination() {
+Coord get_destination() {
 
 
-  request[0]='\0';
-  response[0]='\0';
+  memset(request, 0, sizeof(request));
+  memset(response, 0, sizeof(response));
 
   int offset = 0;
   Serial.println("GETing user destination");
@@ -372,7 +371,7 @@ void get_destination() {
     Serial.println("Empty response");
     destination = make_error_coord();
 
-    return;
+    return destination;
   }
 
   Serial.printf("Response is: %s\r\n", response);
@@ -382,14 +381,11 @@ void get_destination() {
   ptr = strtok(NULL, ",");
   double dest_lon = atof(ptr);
 
-  memset(request, 0, sizeof(request));
-  memset(response, 0, sizeof(response));
-
+  Coord destination;
   destination.lat = dest_lat;
   destination.lon = dest_lon;
   destination.error = 0;
-
-  // return destination;
+  return destination;
 
 }
 
@@ -410,7 +406,7 @@ bool on_off_check(){
       show_center();
       Serial.println(55555);
 
-      get_destination();
+      destination = get_destination();
       Serial.println(666666);
 
       Serial.println("Powered on");
@@ -426,7 +422,7 @@ bool on_off_check(){
 }
 
 
-double get_azimuth(Coord current_location, Coord destination) {
+void set_azimuth_and_proximity(Coord current_location, Coord destination) {
   double current_lat = current_location.lat;
   double current_lon = current_location.lon;
 
@@ -437,16 +433,15 @@ double get_azimuth(Coord current_location, Coord destination) {
   memset(response, 0, sizeof(response));
 
   int offset = 0;
-  offset += sprintf(request + offset, "GET http://608dev-2.net/sandbox/sc/team44/compute_angle.py?current_lat=%f&current_lon=%f&dest_lat=%f&dest_lon=%f HTTP/1.1\r\n", current_lat, current_lon, dest_lat, dest_lon);
+  offset += sprintf(request + offset, "GET http://608dev-2.net/sandbox/sc/team44/map/compute_angle.py?current_lat=%f&current_lon=%f&dest_lat=%f&dest_lon=%f HTTP/1.1\r\n", current_lat, current_lon, dest_lat, dest_lon);
   offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
   offset += sprintf(request + offset, "\r\n");
   do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-  double forward_azimuth = atof(response);
 
-  memset(request, 0, sizeof(request));
-  memset(response, 0, sizeof(response));
-
-  return forward_azimuth;
+  char* ptr = strtok(response, ",");
+  forward_azimuth = atof(ptr);
+  ptr = strtok(NULL, ",");
+  proximity = atof(ptr);
 }
 
 
@@ -459,10 +454,10 @@ void post_reporter_fsm() {
       char body[100]; //for body
 
 
-      int offset = 0;
       memset(request, 0, sizeof(request));
       memset(response, 0, sizeof(response));
 
+      int offset = 0;
       sprintf(body,"user=%s&steps=%d",main_user,steps);//generate body, posting to User, 1 step
       int body_len = strlen(body); //calculate body length (for header reporting)
       offset += sprintf(request + offset,"POST http://608dev-2.net/sandbox/sc/team44/steps.py HTTP/1.1\r\n");
@@ -521,8 +516,12 @@ Coord make_error_coord() {
   return error_coord;
 }
 
-
-
+void set_geo_values() {
+  destination = get_destination();
+  current_location = getLocation();
+  sendLocation(current_location);
+  set_azimuth_and_proximity(current_location, destination);
+}
 
 
 
@@ -562,10 +561,10 @@ void setup() {
 
   // === Get current pressure conditions ===
 
-  int offset = 0;
   memset(request, 0, sizeof(request));
   memset(response, 0, sizeof(response));
 
+  int offset = 0;
   Serial.println("GET current pressure conditions from a weather API");
   offset += sprintf(request + offset, "GET https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cambridge, ma?unitGroup=metric&elements=pressure&include=current&key=QGXZBRL26UYTTTW9C67URDEFB&contentType=json HTTP/1.1\r\n");
   offset += sprintf(request + offset, "Host: weather.visualcrossing.com\r\n");
@@ -606,7 +605,8 @@ void setup() {
 
   }
 
-
+  set_geo_values();
+  
   // === Calibration For Compass ===
 
   show_border();
@@ -728,10 +728,10 @@ void loop() {
 
     char body[100]; //for body
 
-    int offset = 0;
     memset(request, 0, sizeof(request));
     memset(response, 0, sizeof(response));
 
+    int offset = 0;
     Serial.println("POSTing sensor data.");
     sprintf(body,"user=%s&pressure=%f&altitude=%f&temperature=%f&hello=%s", main_user, pressure, elevation, temperature, num);//generate body, posting to User, 1 step
     int body_len = strlen(body); //calculate body length (for header reporting)
@@ -757,51 +757,17 @@ void loop() {
 
     // === Compass and Geolocation Stuff ===
 
-    Serial.printf("Destination: %f, %f\r\n", destination.lat, destination.lon);
-
-    Coord current_location = getLocation();
-
-    // Serial.printf("3\r\n");
-
-    sendLocation(current_location);
-
-    // Serial.printf("4\r\n");
-
-    double forward_azimuth = get_azimuth(current_location, destination);
-
-    // Serial.printf("5\r\n");
-
-    double heading = update_compass();
-
-    // Serial.printf("6\r\n");
-
-    double filtered_heading = mag_filter.step(heading);
-
-    // Serial.printf("7\r\n");
-
-    double calc_angle = forward_azimuth - filtered_heading + theta0;
-
-    // Serial.printf("8\r\n");
-
-    int actual_angle = angle_in_range(calc_angle);
-
-    // Serial.printf("Forward azimuth: %f\r\n", forward_azimuth);
-    // Serial.printf("Heading: %f\r\n", heading);
-    // Serial.printf("Filtered heading: %f\r\n", filtered_heading);
-    // Serial.printf("Calc angle: %f\r\n", calc_angle);
-    // Serial.printf("Final angle: %d\r\n", actual_angle);
-
-    // Serial.printf("9\r\n");
-
-    set_LED_direction(actual_angle);
-
-    // Serial.printf("10\r\n");
-
-
-
-
+    set_geo_values();
     ping_timer = millis();
   }
+
+  double heading = update_compass();
+  double filtered_heading = mag_filter.step(heading);
+
+  double calc_angle = forward_azimuth - filtered_heading + theta0;
+  int actual_angle = angle_in_range(calc_angle);
+
+  set_LED_direction(actual_angle);
 
 
 

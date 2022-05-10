@@ -14,4 +14,5 @@ def request_handler(request):
     north_lon, north_lat, back_az = geo.fwd(lons=current_lon, lats=current_lat, az=0, dist=100)
     forward_azimuth, back_azimuth, dist = geo.inv(lons1=north_lon, lats1=north_lat, lons2=dest_lon, lats2=dest_lat)
 
-    return round(90 - forward_azimuth) % 360
+    final_forward_azimuth = round(90 - forward_azimuth) % 360
+    return f'{final_forward_azimuth},{dist}'
