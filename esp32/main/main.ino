@@ -229,10 +229,6 @@ void connectToWiFi(){
   }
 }
 
-<<<<<<< HEAD
-double theta0 = -45.0; // Offset to account for positioning of the magnetometer on the board, etc.
-=======
->>>>>>> 7eb8ae4d1fb82c58ec78e8618a92c20c4854a930
 
 // === All Other Functions ===
 
