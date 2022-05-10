@@ -146,18 +146,29 @@ def get_data(GET_type: str, user: str) -> str:
 
     one_hour_ago: int = get_now_time() - 60*60
 
-    # === Mostly used by web-browser for debugging or the curious ===
+    # === Quick Checks ===
+
+    # Checking that a valid GET request name was given
+    if not get_request.includes(GET_type):
+        return "Invalid request name."
+
 
     # Checking that the user has ever collected data.
     with sqlite3.connect(current_db) as c:
         userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (user,)).fetchone()
 
-    if(not userExistsCheck[0]):
-        return "User has not collected any data."
+    if(not userExistsCheck[0]): # Handling the cases where the user has never collected any data or destination differently
+        
+        if GET_type == get_request.trail_json:
+            output = {"locations": [], "timing": []}
+            return json.dumps(output)
 
-    # Checking that a valid GET request name was given
-    if not get_request.includes(GET_type):
-        return "Invalid request name."
+
+        elif GET_type == get_request.web_destination:
+            return "You have not selected any! Please choose one :)"
+
+
+        return "User has not collected any data."
 
 
     if GET_type == get_request.vel_graph:
