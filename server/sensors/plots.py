@@ -114,7 +114,11 @@ def request_handler(request):
             # things = c.execute('''SELECT pres, alt, temp, timing FROM sk_table WHERE user = ? ORDER by timing ASC;''',(USERS[i],)).fetchall()
             things = c.execute('''SELECT pres, alt, temp, timing FROM sk_table WHERE user = ? ORDER by timing DESC LIMIT 1000;''', (current,)).fetchall()
             print(things)
+            index = 0
             for row in things:
+                if(index % 100 != 0):
+                    index += 1
+                    continue
                 # print(row)
                 if row[0] is None or row[1] is None or row[2] is None or row[3] is None:
                     raise Exception(f"{row = }")
@@ -130,7 +134,11 @@ def request_handler(request):
             nconn = sqlite3.connect(steps_db)
             nc = nconn.cursor()
             stepThing = nc.execute('''SELECT steps, timing FROM steps_table WHERE user = ? ORDER by timing DESC LIMIT 1000;''', (current,)).fetchall()
+            step_index = 0
             for row in stepThing:
+                if(step_index % 100 != 0):
+                    index += 1
+                    continue
                 if row[0] is None:
                     raise Exception(f"{row = }")
                 steps.append(float(row[0]))
