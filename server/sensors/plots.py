@@ -1,6 +1,5 @@
 import sqlite3
 import datetime
-from turtle import width
 from bokeh.plotting import figure
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.embed import components
