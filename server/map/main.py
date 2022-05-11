@@ -130,7 +130,7 @@ def get_data(GET_type: str, user: str) -> str:
     if GET_type == get_request.destination:
         with sqlite3.connect(current_db) as c:
             row = c.execute('''SELECT landmark_name FROM landmarks WHERE user=? ORDER BY timing DESC;''', (user,)).fetchone()
-
+        
         if row==None: # This should never occur, else ESP32 will freak out
             return "42.3592057337819,-71.09316160376488" # lobby 7 as a default
         else:
@@ -146,29 +146,18 @@ def get_data(GET_type: str, user: str) -> str:
 
     one_hour_ago: int = get_now_time() - 60*60
 
-    # === Quick Checks ===
-
-    # Checking that a valid GET request name was given
-    if not get_request.includes(GET_type):
-        return "Invalid request name."
-
+    # === Mostly used by web-browser for debugging or the curious ===
 
     # Checking that the user has ever collected data.
     with sqlite3.connect(current_db) as c:
         userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (user,)).fetchone()
 
-    if(not userExistsCheck[0]): # Handling the cases where the user has never collected any data or destination differently
-        
-        if GET_type == get_request.trail_json:
-            output = {"locations": [], "timing": []}
-            return json.dumps(output)
-
-
-        elif GET_type == get_request.web_destination:
-            return "You have not selected any! Please choose one :)"
-
-
+    if(not userExistsCheck[0]):
         return "User has not collected any data."
+
+    # Checking that a valid GET request name was given
+    if not get_request.includes(GET_type):
+        return "Invalid request name."
 
 
     if GET_type == get_request.vel_graph:

@@ -123,7 +123,7 @@ def request_handler(request):
             size1 = len(things)
             index = 0
             for row in things:
-                if(index % 500 != 0):
+                if(index % 25 != 0):
                     index += 1
                     continue
                 # print(row)
@@ -145,7 +145,7 @@ def request_handler(request):
             size2 = len(stepThing)
             # return "size1: " + str(size1) + " size2: " + str(size2)
             for row in stepThing:
-                if(step_index % 500 != 0):
+                if(step_index % 25 != 0):
                     index += 1
                     continue
                 if row[0] is None:
