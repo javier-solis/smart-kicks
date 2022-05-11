@@ -153,7 +153,18 @@ def get_data(GET_type: str, user: str) -> str:
         userExistsCheck = c.execute("SELECT EXISTS(SELECT 1 FROM all_users WHERE user=?)", (user,)).fetchone()
 
     if(not userExistsCheck[0]):
+
+        if GET_type == get_request.trail_json:
+            output = {"locations": [], "timing": []}
+            return json.dumps(output)
+
+        elif GET_type == get_request.web_destination:
+            return "You have not selected any! Please choose one :)"
+
         return "User has not collected any data."
+
+
+
 
     # Checking that a valid GET request name was given
     if not get_request.includes(GET_type):
