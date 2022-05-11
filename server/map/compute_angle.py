@@ -11,8 +11,9 @@ def request_handler(request):
         return 'Value passed in is wrong'
     
     geo = Geod(ellps='WGS84')
-    north_lon, north_lat, back_az = geo.fwd(lons=current_lon, lats=current_lat, az=0, dist=100)
-    forward_azimuth, back_azimuth, dist = geo.inv(lons1=north_lon, lats1=north_lat, lons2=dest_lon, lats2=dest_lat)
+    # north_lon, north_lat, back_az = geo.fwd(lons=current_lon, lats=current_lat, az=0, dist=100)
+    # forward_azimuth, back_azimuth, dist = geo.inv(lons1=north_lon, lats1=north_lat, lons2=dest_lon, lats2=dest_lat)
+    forward_azimuth, back_azimuth, dist = geo.inv(lons1=current_lon, lats1=current_lat, lons2=dest_lon, lats2=dest_lat)
 
     final_forward_azimuth = round(90 - forward_azimuth) % 360
     return f'{final_forward_azimuth},{dist}'
