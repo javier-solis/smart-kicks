@@ -10,7 +10,7 @@
     "name": "Lobby 10",
     "lat": 42.35945141024759,
     "lon": -71.09190296694244,
-    "description": "Insert description"
+    "description": "Memorial Lobby (10), a War Memorial is frequently used by students and affiliates to promote student group and department activities."
   },
 
   {
@@ -45,183 +45,243 @@
     "name": "Next House",
     "lat": 42.35504215308147,
     "lon": -71.10160891297032,
-    "description": "Insert description"
+    "description": "Next House, officially called 500 Memorial Drive, is home to 360 friendly undergraduate residents."
   },
 
   {
     "name": "New House",
-    "lat": 42.35529871912254,
-    "lon": -71.10060520207672,
-    "description": "Insert description"
+    "lat": 42.35514015076352,
+    "lon": -71.1006159309131,
+    "description": "New House, also called New West Campus Houses, is home to around 290 undergraduates."
   },
 
   {
     "name": "MacGregor House",
-    "lat": 42.35539385994595,
-    "lon": -71.09943575891268,
-    "description": "Insert description"
+    "lat": 42.355333421221445,
+    "lon": -71.09943091185853,
+    "description": "MacGregor House was built in 1970 and is home to 300 undergraduate residents."
   },
 
   {
     "name": "Burton-Conner House",
-    "lat": 42.35628701489409,
-    "lon": -71.09770628673124,
-    "description": "Insert description"
+    "lat": 42.35608087919104,
+    "lon": -71.0977813885858,
+    "description": "Burton-Conner House, while currently closed due to renovations, usually houses around 340 undergraduates."
   },
 
   {
     "name": "Baker House",
-    "lat": 42.35689748974055,
-    "lon": -71.0956463501487,
-    "description": "Insert description"
+    "lat": 42.356748966299,
+    "lon": -71.09565601371301,
+    "description": "Baker House, named after Everett Moore Baker, a former MIT Dean of Students who died in a plane crash, houses around 315 students."
   },
 
   {
     "name": "McCormick House",
-    "lat": 42.35750795865658,
-    "lon": -71.09455200883923,
-    "description": "Insert description"
+    "lat": 42.35732329473771,
+    "lon": -71.09450434440397,
+    "description": "McCormick Hall is MIT's only women-only dorm and houses 237 undergraduates. It is named after Katharine Dexter McCormick (SB 1904, Biology): biologist, suffragist, philanthropist."
   },
 
   {
     "name": "Maseeh Hall",
-    "lat": 42.3579440042697,
-    "lon": -71.09348985409459,
-    "description": "Insert description"
+    "lat": 42.35770593540138,
+    "lon": -71.09350023091298,
+    "description": "Maseeh Hall is named after Fariborz Maseeh and was opened as a dorm in 2010, though it existed as a Hotel between 1901-1937."
   },
 
   {
     "name": "Simmons Hall",
-    "lat": 42.35746831801015,
-    "lon": -71.10006663068926,
-    "description": "Insert description"
+    "lat": 42.35727572580466,
+    "lon": -71.10076071371296,
+    "description": "Simmons Hall, affectionately called the Sponge, was designed by Steven Hall and opened in 2002."
   },
 
   {
     "name": "New Vassar",
-    "lat": 42.35914113206754,
-    "lon": -71.09757754065204,
-    "description": "Insert description"
+    "lat": 42.359079418858066,
+    "lon": -71.09755862905841,
+    "description": "New Vassar, MIT's newest dorm opened in late 2020 and houses 450 undergraduates."
   },
 
   {
     "name": "Barker Engineering Library",
-    "lat": 42.35997604710713,
-    "lon": -71.09184878302197,
-    "description": "Insert description"
+    "lat": 42.35978577919081,
+    "lon": -71.09202044440386,
+    "description": "Barker Engineering Library is located on the 5th-8th floors of Lobby 10, allowing students to study underneath the iconic Great Dome."
   },
 
   {
-    "name": "Hayden Library",
-    "lat": 42.359167404483834,
-    "lon": -71.0898424906213,
-    "description": "Insert description"
+    "name": "MIT Hayden Library",
+    "lat": 42.359082346792285,
+    "lon": -71.08913780207662,
+    "description": "Newly renovated, MIT's Hayden Library boasts a Courtyard Cafe, 24/7 study spaces, and views of the Charles River."
   },
 
   {
     "name": "East Campus",
-    "lat": 42.360102207607895,
-    "lon": -71.08804982164013,
-    "description": "Insert description"
+    "lat": 42.36025283566394,
+    "lon": -71.08869355182216,
+    "description": "Built in 1924, East Campus is MIT's second-oldest undergraduate dorm,home to over 350 undergraduates."
   },
 
   {
     "name": "Ray and Maria Stata Center",
-    "lat": 42.361744248445916,
-    "lon": -71.09058185789476,
-    "description": "Insert description"
+    "lat": 42.36160947919065,
+    "lon": -71.09056040022202,
+    "description": "Home to many of MIT's course 6 buildings, Ray and Maria Stata Center was designed by 'Pritzzker Prize-winning architect Frank Gehry.'"
   },
 
   {
     "name": "MIT Chapel",
-    "lat": 42.358521607563844,
-    "lon": -71.09412417324027,
-    "description": "Insert description"
+    "lat": 42.35833133524349,
+    "lon": -71.09413490207666,
+    "description": "MIT's Chapel, located at a central spot on campus has been the host of several weddings to MIT's students and alums."
   },
 
   {
     "name": "Tang Hall",
-    "lat": 42.35450804954513,
-    "lon": -71.10345224440402,
-    "description": "Insert description"
+    "lat": 42.35437326476973,
+    "lon": -71.10347370207676,
+    "description": "Tang Hall is a high rise graduate dorm behind Next House that houses about 400 students and families."
   },
 
   {
     "name": "Westgate Apartments",
-    "lat": 42.35504226282074,
-    "lon": -71.10310170022218,
-    "description": "Insert description"
+    "lat": 42.35491540764783,
+    "lon": -71.10314461556767,
+    "description": "Westgate Apartments is near Tang Hall houses both MIT undergraduate and graduate students and families."
   },
   {
     "name": "MIT.nano",
-    "lat": 42.36030789050422,
-    "lon": -71.09155293091294,
-    "description": "Insert description"
+    "lat": 42.36020482933203,
+    "lon": -71.09152074440384,
+    "description": "Also known as Building 12, MIT.nano will soon be renamed 'in honor of Lisa T. Su ('90, SM '91, PHD '94)."
   },
   {
     "name": "Zesiger Sports and Fitness Center",
-    "lat": 42.35883013863928,
-    "lon": -71.09571853091295,
-    "description": "Insert description"
+    "lat": 42.358695363133606,
+    "lon": -71.09569707324023,
+    "description": "The Z Center is the central athletic facility on campus and is frequently used by MIT students and affiliates alike."
   },
   {
     "name": "Stratton Student Center",
-    "lat": 42.3592438890078,
-    "lon": -71.09473313091294,
-    "description": "Insert description"
+    "lat": 42.359053618874476,
+    "lon": -71.09469021556751,
+    "description": "Affectionately called 'The Stud,' the Stratton Student Center contains study spaces, Music Rooms, Convenience Stores, Restaurants, and more for MIT students."
   },
   {
     "name": "Kresge Auditorium",
-    "lat": 42.358298139981734,
-    "lon": -71.09504518858566,
+    "lat": 42.35816336333504,
+    "lon": -71.0950344597493,
     "description": "Insert description"
   },
   {
     "name": "Sidney-Pacific Graduate Residence",
-    "lat": 42.359951580129554,
-    "lon": -71.10196915974932,
+    "lat": 42.35993572448569,
+    "lon": -71.10208717694935,
     "description": "Insert description"
   },
   {
     "name": "70 Amherst Street",
-    "lat": 42.36020619078646,
-    "lon": -71.0869864597493,
+    "lat": 42.36007141823219,
+    "lon": -71.0869650020766,
     "description": "Insert description"
   },
   {
     "name": "Ashdown House",
-    "lat": 42.359035594035824,
-    "lon": -71.10066197324024,
+    "lat": 42.35884532327179,
+    "lon": -71.10062978673112,
     "description": "Insert description"
   },
   {
     "name": "Edgerton House",
-    "lat": 42.360237518506906,
-    "lon": -71.09800572905839,
+    "lat": 42.36012652942093,
+    "lon": -71.09803791556747,
     "description": "Insert description"
   },
   {
     "name": "Graduate Tower at Site 4",
-    "lat": 42.36216121292432,
-    "lon": -71.08531325418558,
+    "lat": 42.36197887919058,
+    "lon": -71.08529179651279,
     "description": "Insert description"
   },
   {
     "name": "The Warehouse",
-    "lat": 42.358944194289506,
-    "lon": -71.10015691556752,
+    "lat": 42.35878563512885,
+    "lon": -71.10018910207661,
     "description": "Insert description"
   },
   {
-    "name": "Edgerton Center",
-    "lat": 42.359442576632006,
-    "lon": -71.09310671556753,
+    "name": "MIT Edgerton Center",
+    "lat": 42.35923645128002,
+    "lon": -71.09312817324027,
     "description": "Insert description"
   },
   {
-    "name": "W97",
-    "lat": 42.35479569183852,
-    "lon": -71.10657673091309,
+    "name": "MIT Building W97",
+    "lat": 42.354621265225425,
+    "lon": -71.10671620578587,
+    "description": "Insert description"
+  },
+  {
+    "name": "CAVA",
+    "lat": 42.36312285019668,
+    "lon": -71.08785685275679,
+    "description": "Insert description"
+  },
+  {
+    "name": "Flour Bakery + Cafe",
+    "lat": 42.360997791132604,
+    "lon": -71.09663090207656,
+    "description": "Insert description"
+  },
+  {
+    "name": "Chipotle",
+    "lat": 42.36478887035592,
+    "lon": -71.10328643091285,
+    "description": "Insert description"
+  },
+  {
+    "name": "Oath Pizza",
+    "lat": 42.36117421605464,
+    "lon": -71.09623735509781,
+    "description": "Insert description"
+  },
+  {
+    "name": "Saloniki Greek",
+    "lat": 42.361042884386904,
+    "lon": -71.09600871516807,
+    "description": "Insert description"
+  },
+  {
+    "name": "Random Hall",
+    "lat": 42.36187560676924,
+    "lon": -71.09828117324017,
+    "description": "Random Hall is the smallest undergraduate dorm, housing 93 undergraduates."
+  },
+  {
+    "name": "Beantown Taqueria",
+    "lat": 42.3617262796736,
+    "lon": -71.09720214937711,
+    "description": "Insert description"
+  },
+  {
+    "name": "Veggie Galaxy",
+    "lat": 42.36365907412122,
+    "lon": -71.10111139092822,
+    "description": "Insert description"
+  },
+  {
+    "name": "New City Microcreamery",
+    "lat": 42.36360720882998,
+    "lon": -71.1001363834411,
+    "description": "Insert description"
+  },
+  {
+    "name": "Toscanini's Ice Cream",
+    "lat": 42.36352597781589,
+    "lon": -71.09939977207341,
     "description": "Insert description"
   }
 ]
