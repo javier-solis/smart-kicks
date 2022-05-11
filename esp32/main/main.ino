@@ -77,7 +77,7 @@ enum PLAY_STATE {IDLE, PLAY};
 PLAY_STATE audio_state = IDLE;
 
 uint32_t play_timer;
-double prox_threshold = 50.0;
+double prox_threshold = 25.0;
 
 bool play_flag = false;
 
@@ -120,7 +120,7 @@ const int PING = 10 * ONE_SEC;
 uint32_t ping_timer;
 
 char main_user[60];
-const int main_user_n = sprintf(main_user, "Yaseen"); //  <------------------------------- USER MUST EDIT THIS!!!!!!
+const int main_user_n = sprintf(main_user, "julia"); //  <------------------------------- USER MUST EDIT THIS!!!!!!
 
 bool powered_off = true;
 
@@ -283,8 +283,6 @@ Coord getLocation() {
     memset(request, 0, sizeof(request));
     memset(response, 0, sizeof(response));
 
-    // Serial.println("GET geolocation");
-
     offset = 0; //reset offset variable for sprintf-ing
     offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
     offset += sprintf(request + offset, "Host: googleapis.com\r\n");
@@ -302,8 +300,6 @@ Coord getLocation() {
       Serial.println("Empty response");
       return make_error_coord();
     }
-
-    // Serial.println("finished GET of geolocation");
 
     char* start = strchr(response,'{');
     char* end = strrchr(response,'}');
@@ -350,7 +346,6 @@ void sendLocation(Coord current_location) {
 
   char buffer[1000];
   int n = sprintf(buffer, "POSTing this to our server: %s", json_body);
-  // Serial.println(buffer);
 
   memset(request, 0, sizeof(request));
   memset(response, 0, sizeof(response));
@@ -363,8 +358,6 @@ void sendLocation(Coord current_location) {
   offset += sprintf(request + offset, "\r\n");
   offset += sprintf(request + offset, "%s", json_body);
   do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-  // Serial.println("finished POSTing to our server");
-
 }
 
 
@@ -378,22 +371,17 @@ Coord get_destination() {
   memset(response, 0, sizeof(response));
 
   int offset = 0;
-  // Serial.println("GETing user destination");
   offset += sprintf(request + offset, "GET http://608dev-2.net/sandbox/sc/team44/map/main.py?destination=%s HTTP/1.1\r\n", main_user);
   offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
   offset += sprintf(request + offset, "\r\n");
   do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-  // Serial.println("Finished GET");
 
-  // Serial.println(response);
   if (!*response) {
     Serial.println("Empty response");
     destination = make_error_coord();
 
     return destination;
   }
-
-  // Serial.printf("Response is: %s\r\n", response);
 
   char* ptr = strtok(response, ",");
   double dest_lat = atof(ptr);
@@ -463,26 +451,26 @@ void set_azimuth_and_proximity(Coord current_location, Coord destination) {
 
 
 //Post reporting state machine
-//use post_state for your state variable!
+
 void post_reporter_fsm() {
-  //your code here
+
   if(millis() - ping_timer > PING) {
-      char body[100]; //for body
+      char body[100];
 
 
       memset(request, 0, sizeof(request));
       memset(response, 0, sizeof(response));
 
       int offset = 0;
-      sprintf(body,"user=%s&steps=%d",main_user,steps);//generate body, posting to User, 1 step
-      int body_len = strlen(body); //calculate body length (for header reporting)
+      sprintf(body,"user=%s&steps=%d",main_user,steps);
+      int body_len = strlen(body);
       offset += sprintf(request + offset,"POST http://608dev-2.net/sandbox/sc/team44/steps.py HTTP/1.1\r\n");
       offset += sprintf(request + offset,"Host: 608dev.net\r\n");
       offset += sprintf(request + offset,"Content-Type: application/x-www-form-urlencoded\r\n");
-      offset += sprintf(request + offset,"Content-Length: %d\r\n", body_len); //append string formatted to end of request buffer
-      offset += sprintf(request + offset,"\r\n"); //new line from header to body
-      offset += sprintf(request + offset, "%s", body); //body
-      offset += sprintf(request + offset,"\r\n"); //new line
+      offset += sprintf(request + offset,"Content-Length: %d\r\n", body_len);
+      offset += sprintf(request + offset,"\r\n");
+      offset += sprintf(request + offset, "%s", body);
+      offset += sprintf(request + offset,"\r\n");
 
       do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT,true);
 
@@ -535,10 +523,6 @@ void run_instrument() {
 
 // === Compass Stuff ===
 
-// double rad_to_deg(double rad) {
-//   return rad * 180.0 / PI;
-// }
-
 float update_compass() {
   compass.update();
   float compass_heading = compass.heading;
@@ -566,7 +550,6 @@ Coord make_error_coord() {
 }
 
 void set_geo_values() {
-  // destination = get_destination();
   current_location = getLocation();
   sendLocation(current_location);
   set_azimuth_and_proximity(current_location, destination);
@@ -615,14 +598,11 @@ void setup() {
   memset(response, 0, sizeof(response));
 
   int offset = 0;
-  // Serial.println("GET current pressure conditions from a weather API");
   offset += sprintf(request + offset, "GET https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cambridge, ma?unitGroup=metric&elements=pressure&include=current&key=QGXZBRL26UYTTTW9C67URDEFB&contentType=json HTTP/1.1\r\n");
   offset += sprintf(request + offset, "Host: weather.visualcrossing.com\r\n");
   offset += sprintf(request + offset, "\r\n");
 
   bool succeed3 = do_https_request("weather.visualcrossing.com", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false, WEATHER_CERT);
-
-  // Serial.println("Finished GET");
 
   while(!succeed3){
     succeed3 = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true, WEATHER_CERT);
@@ -650,8 +630,6 @@ void setup() {
     response[0] = 0;
 
     elevation = 8.0;
-
-    // Serial.println("3");
 
   }
 
@@ -686,12 +664,9 @@ void setup() {
 
 }
 
-int test_num=0;
-
 void loop() {
 
   if(WiFi.status() != WL_CONNECTED){
-    // powered_off=true;
     connectToWiFi();
   }
 
@@ -699,59 +674,49 @@ void loop() {
     return;
   }
 
-
-  // Serial.println(test_num);
-  test_num++;
-
   // === Get IMU information ===
-  // Serial.println(11);
+
   imu.readAccelData(imu.accelCount);
-  // Serial.println(22);
+
 
   float x, y, z;
-  // Serial.println(33);
+
 
   x = imu.accelCount[0] * imu.aRes;
-  // Serial.println(44);
+
 
   y = imu.accelCount[1] * imu.aRes;
-  // Serial.println(55);
+
 
   z = imu.accelCount[2] * imu.aRes;
-  // Serial.println(66);
+
 
   float acc_mag = sqrt(x * x + y * y + z * z);
-  // Serial.println(77);
+
 
   float avg_acc_mag = 1.0 / 3.0 * (acc_mag + old_acc_mag + older_acc_mag);
-  // Serial.println(88);
+
 
   older_acc_mag = old_acc_mag;
   old_acc_mag = acc_mag;
-  // Serial.println(1);
+
 
   step_reporter_fsm(avg_acc_mag);
 
-  // Serial.println(test_num);
-  test_num++;
   // === Pressure and Altitude Stuff ===
 
   temperature = bmp.readTemperature()*1.8 +32;
   pressure = bmp.readPressure();
 
-  if(calibrated==0){// only run calibration if we haven't done it yet
+  if(calibrated==0){ // only run calibration if we haven't done it yet
     calibrated=1;
   }
-  else{// regular height reporting every few seconds after calibration==1
-    //Serial.println(altpressure);
+  else {// regular height reporting every few seconds after calibration==1
     if(millis() - ping_timer > PING) {
     altitude = bmp.readAltitude(altpressure);
-    //ping_timer = millis();
     }
 
   }
-  // Serial.println(test_num);
-  test_num++;
 
   alt_mag = altitude;
   avg_alt_mag = (old_alt_mag + older_alt_mag)/2;
@@ -773,19 +738,14 @@ void loop() {
     delta = 0;
   }
   elevation = elevation + delta;
-  // altitude calibration
 
   char num[] = "7";
-
-
-  // Serial.println(test_num);
-  test_num++;
 
 
   if (millis() - ping_timer > PING){
 
 
-    post_reporter_fsm(); //run post_reporter_fsm (written here)
+    post_reporter_fsm();
 
     char body[100]; //for body
 
@@ -793,7 +753,6 @@ void loop() {
     memset(response, 0, sizeof(response));
 
     int offset = 0;
-    // Serial.println("POSTing sensor data.");
     sprintf(body,"user=%s&pressure=%f&altitude=%f&temperature=%f&hello=%s", main_user, pressure, elevation, temperature, num);//generate body, posting to User, 1 step
     int body_len = strlen(body); //calculate body length (for header reporting)
     offset += sprintf(request + offset,"POST http://608dev-2.net/sandbox/sc/team44/w1_sk_server.py HTTP/1.1\r\n");
@@ -804,7 +763,6 @@ void loop() {
     offset += sprintf(request + offset, "%s", body); //body
     offset += sprintf(request + offset,"\r\n"); //new line
     do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT,true);
-    // Serial.println("Finished the POST");
 
 
 
@@ -827,9 +785,6 @@ void loop() {
 
   double heading = update_compass();
   double filtered_heading = mag_filter.step(heading);
-
-  // Serial.printf("Heading: %f\r\n", heading);
-  // Serial.printf("Filtered heading: %f\r\n\n", filtered_heading);
 
   if (millis() - led_timer >= 1000) {
     double calc_angle = forward_azimuth - filtered_heading + theta0;
