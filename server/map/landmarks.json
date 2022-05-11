@@ -1,50 +1,227 @@
-[   
-    {
-        "name": "Lobby 7",
-        "lat": 42.3592057337819,
-        "lon": -71.09316160376488,
-        "description": "Lobby 7, the main entrance lobby to the Massachusetts Institute of Technology, is the gateway through which many MIT buildings can be accessed."
-    },
+[
+  {
+    "name": "Lobby 7",
+    "lat": 42.3592057337819,
+    "lon": -71.09316160376488,
+    "description": "Lobby 7, the main entrance lobby to the Massachusetts Institute of Technology, is the gateway through which many MIT buildings can be accessed."
+  },
 
-    {
-        "name": "Lobby 10",
-        "lat": 42.35945141024759,
-        "lon": -71.09190296694244,
-        "description": "Insert description"
-    },
-    
-    {
-        "name": "Alchemist",
-        "lat": 42.359142547381886,
-        "lon": -71.09403690363447,
-        "description": "This is an art installation made by Jaume Plensa in 2010. The piece was designed to emphasize 'thinking and calculation'. It sits near the Stratton Student Center and is across the street from Lobby 7."
-    },
+  {
+    "name": "Lobby 10",
+    "lat": 42.35945141024759,
+    "lon": -71.09190296694244,
+    "description": "Insert description"
+  },
 
-    {
-        "name": "Northwest Passage",
-        "lat": 42.36018502936492,
-        "lon": -71.09187479404942,
-        "description": "Northwest Passage is an installation made by Olafur Eliasson in 2018. The passage consists of ringed lights that guide one into the newly built MIT.nano building."
-    },
+  {
+    "name": "Alchemist",
+    "lat": 42.359142547381886,
+    "lon": -71.09403690363447,
+    "description": "This is an art installation made by Jaume Plensa in 2010. The piece was designed to emphasize 'thinking and calculation'. It sits near the Stratton Student Center and is across the street from Lobby 7."
+  },
 
-    {
-        "name": "Green Building",
-        "lat": 42.36035528827758,
-        "lon": -71.0892839719175,
-        "description": "The Green Building (which isn't actually green!) is really shorthand for the Cecil and Ida Green Building. It's an academic building which concluded construction in 1964 and is home to MIT's Department of Earth, Atmospheric, and Planetary Sciences (EAPS). It also happens to be one of Cambridge's tallest buildings."
-    },
+  {
+    "name": "Northwest Passage",
+    "lat": 42.36018502936492,
+    "lon": -71.09187479404942,
+    "description": "Northwest Passage is an installation made by Olafur Eliasson in 2018. The passage consists of ringed lights that guide one into the newly built MIT.nano building."
+  },
 
-    {
-        "name": "Fairchild Building",
-        "lat": 42.36116810444992,
-        "lon": -71.09243685702856,
-        "description": "The Fairchild Building, also known by its number as Building 38, is home to many segments of the EECS department at MIT. The 6.08 Lab is also inside of it!"
-    },
+  {
+    "name": "Green Building",
+    "lat": 42.36035528827758,
+    "lon": -71.0892839719175,
+    "description": "The Green Building (which isn't actually green!) is really shorthand for the Cecil and Ida Green Building. It's an academic building which concluded construction in 1964 and is home to MIT's Department of Earth, Atmospheric, and Planetary Sciences (EAPS). It also happens to be one of Cambridge's tallest buildings."
+  },
 
-    {
-        "name": "Next House",
-        "lat": 42.35504215308147,
-        "lon": -71.10160891297032,
-        "description": "Insert description"
-    }
+  {
+    "name": "Fairchild Building",
+    "lat": 42.36116810444992,
+    "lon": -71.09243685702856,
+    "description": "The Fairchild Building, also known by its number as Building 38, is home to many segments of the EECS department at MIT. The 6.08 Lab is also inside of it!"
+  },
+
+  {
+    "name": "Next House",
+    "lat": 42.35504215308147,
+    "lon": -71.10160891297032,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "New House",
+    "lat": 42.35529871912254,
+    "lon": -71.10060520207672,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "MacGregor House",
+    "lat": 42.35539385994595,
+    "lon": -71.09943575891268,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Burton-Conner House",
+    "lat": 42.35628701489409,
+    "lon": -71.09770628673124,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Baker House",
+    "lat": 42.35689748974055,
+    "lon": -71.0956463501487,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "McCormick House",
+    "lat": 42.35750795865658,
+    "lon": -71.09455200883923,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Maseeh Hall",
+    "lat": 42.3579440042697,
+    "lon": -71.09348985409459,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Simmons Hall",
+    "lat": 42.35746831801015,
+    "lon": -71.10006663068926,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "New Vassar",
+    "lat": 42.35914113206754,
+    "lon": -71.09757754065204,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Barker Engineering Library",
+    "lat": 42.35997604710713,
+    "lon": -71.09184878302197,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Hayden Library",
+    "lat": 42.359167404483834,
+    "lon": -71.0898424906213,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "East Campus",
+    "lat": 42.360102207607895,
+    "lon": -71.08804982164013,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Ray and Maria Stata Center",
+    "lat": 42.361744248445916,
+    "lon": -71.09058185789476,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "MIT Chapel",
+    "lat": 42.358521607563844,
+    "lon": -71.09412417324027,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Tang Hall",
+    "lat": 42.35450804954513,
+    "lon": -71.10345224440402,
+    "description": "Insert description"
+  },
+
+  {
+    "name": "Westgate Apartments",
+    "lat": 42.35504226282074,
+    "lon": -71.10310170022218,
+    "description": "Insert description"
+  },
+  {
+    "name": "MIT.nano",
+    "lat": 42.36030789050422,
+    "lon": -71.09155293091294,
+    "description": "Insert description"
+  },
+  {
+    "name": "Zesiger Sports and Fitness Center",
+    "lat": 42.35883013863928,
+    "lon": -71.09571853091295,
+    "description": "Insert description"
+  },
+  {
+    "name": "Stratton Student Center",
+    "lat": 42.3592438890078,
+    "lon": -71.09473313091294,
+    "description": "Insert description"
+  },
+  {
+    "name": "Kresge Auditorium",
+    "lat": 42.358298139981734,
+    "lon": -71.09504518858566,
+    "description": "Insert description"
+  },
+  {
+    "name": "Sidney-Pacific Graduate Residence",
+    "lat": 42.359951580129554,
+    "lon": -71.10196915974932,
+    "description": "Insert description"
+  },
+  {
+    "name": "70 Amherst Street",
+    "lat": 42.36020619078646,
+    "lon": -71.0869864597493,
+    "description": "Insert description"
+  },
+  {
+    "name": "Ashdown House",
+    "lat": 42.359035594035824,
+    "lon": -71.10066197324024,
+    "description": "Insert description"
+  },
+  {
+    "name": "Edgerton House",
+    "lat": 42.360237518506906,
+    "lon": -71.09800572905839,
+    "description": "Insert description"
+  },
+  {
+    "name": "Graduate Tower at Site 4",
+    "lat": 42.36216121292432,
+    "lon": -71.08531325418558,
+    "description": "Insert description"
+  },
+  {
+    "name": "The Warehouse",
+    "lat": 42.358944194289506,
+    "lon": -71.10015691556752,
+    "description": "Insert description"
+  },
+  {
+    "name": "Edgerton Center",
+    "lat": 42.359442576632006,
+    "lon": -71.09310671556753,
+    "description": "Insert description"
+  },
+  {
+    "name": "W97",
+    "lat": 42.35479569183852,
+    "lon": -71.10657673091309,
+    "description": "Insert description"
+  }
 ]
