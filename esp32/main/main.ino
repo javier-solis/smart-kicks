@@ -52,12 +52,14 @@ float altitude;
 
 // - Magnetometer -
 
-float beta = 0.90; // 0 <= beta <= 1, increase to emphasize new values more
+float beta = 0.5; // 0 <= beta <= 1, increase to emphasize new values more
 
 float alpha = 1 - beta;
 IIR mag_filter(alpha);
 
-double theta0 = -45; // Offset to account for positioning of the magnetometer on the board, etc.
+double theta0 = 180; // Offset to account for positioning of the magnetometer on the board, etc.
+
+uint32_t led_timer;
 
 
 // - Step Counter -
@@ -65,6 +67,20 @@ float x, y, z;
 float old_acc_mag;
 float older_acc_mag;
 int steps = 0;
+
+
+// Audio variables
+uint8_t AUDIO_TRANSDUCER = 14;
+uint8_t AUDIO_PWM = 1;
+
+enum PLAY_STATE {IDLE, PLAY};
+PLAY_STATE audio_state = IDLE;
+
+uint32_t play_timer;
+double prox_threshold = 50.0;
+
+bool play_flag = false;
+
 
 
 // - Pressure and Altitude -
@@ -91,7 +107,7 @@ struct Coord {
 // === Time Variables ===
 // Note, these are all represented by their millisecond value, unless otherwise specified
 
-const int ONE_SEC= 1000;
+const int ONE_SEC = 1000;
 
 
 // === System Variables ===
@@ -100,11 +116,11 @@ const int LOOP_PERIOD = 5; // in ms
 uint32_t primary_timer=0;
 
  // (how often data should be collected and uploaded)
-const int PING = 10*ONE_SEC;
-uint32_t ping_timer = 0;
+const int PING = 10 * ONE_SEC;
+uint32_t ping_timer;
 
 char main_user[60];
-const int main_user_n = sprintf(main_user, "bobthebuilder"); //  <------------------------------- USER MUST EDIT THIS!!!!!!
+const int main_user_n = sprintf(main_user, "Ayyub"); //  <------------------------------- USER MUST EDIT THIS!!!!!!
 
 bool powered_off = true;
 
@@ -114,7 +130,7 @@ bool powered_off = true;
 Coord destination;
 Coord current_location;
 double forward_azimuth;
-double proximity;
+double proximity = prox_threshold + 1.0;
 
 // === WiFi Variables ===
 const uint16_t RESPONSE_TIMEOUT = 6000;
@@ -147,11 +163,14 @@ char* SERVER = "googleapis.com";  // Server URL
 // === WiFi Credentials ===
 
 // On Campus:
-// const char NETWORK[] = "MIT GUEST";
+// const char NETWORK[] = "MIT";
 // const char PASSWORD[] = "";
 
 // const char NETWORK[] = "EECS_Labs";
 // const char PASSWORD[] = "";
+
+const char NETWORK[] = "18_62";
+const char PASSWORD[] = "";
 
 // const char NETWORK[] = "608_24G";
 // const char PASSWORD[] = "608g2020";
@@ -160,8 +179,8 @@ char* SERVER = "googleapis.com";  // Server URL
 // const char NETWORK[] = "SLP-F9FD71W0LMX0";
 // const char PASSWORD[] = "bqd1nuuv3nd8d";
 
-const char NETWORK[] = "806net";
-const char PASSWORD[] = "kfhe94jcmshfkr";
+// const char NETWORK[] = "806net";
+// const char PASSWORD[] = "kfhe94jcmshfkr";
 
 // === WiFi Extras ===
 
@@ -264,7 +283,7 @@ Coord getLocation() {
     memset(request, 0, sizeof(request));
     memset(response, 0, sizeof(response));
 
-    Serial.println("GET geolocation");
+    // Serial.println("GET geolocation");
 
     offset = 0; //reset offset variable for sprintf-ing
     offset += sprintf(request + offset, "POST https://www.googleapis.com/geolocation/v1/geolocate?key=%s  HTTP/1.1\r\n", API_KEY);
@@ -284,7 +303,7 @@ Coord getLocation() {
       return make_error_coord();
     }
 
-    Serial.println("finished GET of geolocation");
+    // Serial.println("finished GET of geolocation");
 
     char* start = strchr(response,'{');
     char* end = strrchr(response,'}');
@@ -331,7 +350,7 @@ void sendLocation(Coord current_location) {
 
   char buffer[1000];
   int n = sprintf(buffer, "POSTing this to our server: %s", json_body);
-  Serial.println(buffer);
+  // Serial.println(buffer);
 
   memset(request, 0, sizeof(request));
   memset(response, 0, sizeof(response));
@@ -344,7 +363,7 @@ void sendLocation(Coord current_location) {
   offset += sprintf(request + offset, "\r\n");
   offset += sprintf(request + offset, "%s", json_body);
   do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-  Serial.println("finished POSTing to our server");
+  // Serial.println("finished POSTing to our server");
 
 }
 
@@ -359,14 +378,14 @@ Coord get_destination() {
   memset(response, 0, sizeof(response));
 
   int offset = 0;
-  Serial.println("GETing user destination");
+  // Serial.println("GETing user destination");
   offset += sprintf(request + offset, "GET http://608dev-2.net/sandbox/sc/team44/map/main.py?destination=%s HTTP/1.1\r\n", main_user);
   offset += sprintf(request + offset, "Host: 608dev-2.net\r\n");
   offset += sprintf(request + offset, "\r\n");
   do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false);
-  Serial.println("Finished GET");
+  // Serial.println("Finished GET");
 
-  Serial.println(response);
+  // Serial.println(response);
   if (!*response) {
     Serial.println("Empty response");
     destination = make_error_coord();
@@ -374,7 +393,7 @@ Coord get_destination() {
     return destination;
   }
 
-  Serial.printf("Response is: %s\r\n", response);
+  // Serial.printf("Response is: %s\r\n", response);
 
   char* ptr = strtok(response, ",");
   double dest_lat = atof(ptr);
@@ -398,16 +417,13 @@ bool on_off_check(){
     blinking_center_animation();
 
     if(curr_state==1){
-      Serial.println(121212);
-
       powered_off=false;
-      Serial.println(444444);
 
       show_center();
-      Serial.println(55555);
 
       destination = get_destination();
-      Serial.println(666666);
+
+      play_flag = true;
 
       Serial.println("Powered on");
     }
@@ -484,6 +500,39 @@ void step_reporter_fsm(float avg_acc_mag) {
 
 
 
+void run_instrument() {
+    bool within_proximity = proximity <= prox_threshold;
+    switch(audio_state) {
+      case(IDLE):
+        if (within_proximity && play_flag) {
+          play_timer = millis();
+          audio_state = PLAY;
+          Serial.printf("Entered playing state\r\n");
+        }
+        break;
+      
+      case(PLAY):
+        if (millis() - play_timer <= 400) {
+            Serial.printf("Played first tone\r\n");
+            ledcWriteTone(AUDIO_PWM, 1567.98);
+          }
+        else if (millis() - play_timer <= 800 && millis() - play_timer > 400) {
+          ledcWriteTone(AUDIO_PWM, 1046.50);
+        }
+        else if (millis() - play_timer <= 1200 && millis() - play_timer > 800) {
+          ledcWriteTone(AUDIO_PWM, 311.13);
+        }
+        else {
+          ledcWriteTone(AUDIO_PWM, 0);
+          audio_state = IDLE;
+          play_flag = false;
+        }
+        break;
+    }
+}
+
+
+
 // === Compass Stuff ===
 
 // double rad_to_deg(double rad) {
@@ -517,10 +566,11 @@ Coord make_error_coord() {
 }
 
 void set_geo_values() {
-  destination = get_destination();
+  // destination = get_destination();
   current_location = getLocation();
   sendLocation(current_location);
   set_azimuth_and_proximity(current_location, destination);
+  Serial.printf("Proximity: %f\r\n", proximity);
 }
 
 
@@ -565,14 +615,14 @@ void setup() {
   memset(response, 0, sizeof(response));
 
   int offset = 0;
-  Serial.println("GET current pressure conditions from a weather API");
+  // Serial.println("GET current pressure conditions from a weather API");
   offset += sprintf(request + offset, "GET https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/cambridge, ma?unitGroup=metric&elements=pressure&include=current&key=QGXZBRL26UYTTTW9C67URDEFB&contentType=json HTTP/1.1\r\n");
   offset += sprintf(request + offset, "Host: weather.visualcrossing.com\r\n");
   offset += sprintf(request + offset, "\r\n");
 
   bool succeed3 = do_https_request("weather.visualcrossing.com", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, false, WEATHER_CERT);
 
-  Serial.println("Finished GET");
+  // Serial.println("Finished GET");
 
   while(!succeed3){
     succeed3 = do_https_request(SERVER, request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT, true, WEATHER_CERT);
@@ -601,12 +651,23 @@ void setup() {
 
     elevation = 8.0;
 
-    Serial.println("3");
+    // Serial.println("3");
 
   }
 
+  // Audio setup
+
+  pinMode(AUDIO_TRANSDUCER, OUTPUT);
+
+  //set up AUDIO_PWM which we will control in this lab for music:
+  ledcSetup(AUDIO_PWM, 0, 12);//12 bits of PWM precision
+  // ledcWrite(AUDIO_PWM, 0); //0 is a 0% duty cycle for the NFET
+  ledcAttachPin(AUDIO_TRANSDUCER, AUDIO_PWM);
+
+
   set_geo_values();
-  
+  ping_timer = millis();
+
   // === Calibration For Compass ===
 
   show_border();
@@ -630,7 +691,7 @@ int test_num=0;
 void loop() {
 
   if(WiFi.status() != WL_CONNECTED){
-    powered_off=true;
+    // powered_off=true;
     connectToWiFi();
   }
 
@@ -639,39 +700,39 @@ void loop() {
   }
 
 
-  Serial.println(test_num);
+  // Serial.println(test_num);
   test_num++;
 
   // === Get IMU information ===
-  Serial.println(11);
+  // Serial.println(11);
   imu.readAccelData(imu.accelCount);
-  Serial.println(22);
+  // Serial.println(22);
 
   float x, y, z;
-  Serial.println(33);
+  // Serial.println(33);
 
   x = imu.accelCount[0] * imu.aRes;
-  Serial.println(44);
+  // Serial.println(44);
 
   y = imu.accelCount[1] * imu.aRes;
-  Serial.println(55);
+  // Serial.println(55);
 
   z = imu.accelCount[2] * imu.aRes;
-  Serial.println(66);
+  // Serial.println(66);
 
   float acc_mag = sqrt(x * x + y * y + z * z);
-  Serial.println(77);
+  // Serial.println(77);
 
   float avg_acc_mag = 1.0 / 3.0 * (acc_mag + old_acc_mag + older_acc_mag);
-  Serial.println(88);
+  // Serial.println(88);
 
   older_acc_mag = old_acc_mag;
   old_acc_mag = acc_mag;
-  Serial.println(1);
+  // Serial.println(1);
 
   step_reporter_fsm(avg_acc_mag);
 
-  Serial.println(test_num);
+  // Serial.println(test_num);
   test_num++;
   // === Pressure and Altitude Stuff ===
 
@@ -689,7 +750,7 @@ void loop() {
     }
 
   }
-  Serial.println(test_num);
+  // Serial.println(test_num);
   test_num++;
 
   alt_mag = altitude;
@@ -717,7 +778,7 @@ void loop() {
   char num[] = "7";
 
 
-  Serial.println(test_num);
+  // Serial.println(test_num);
   test_num++;
 
 
@@ -732,7 +793,7 @@ void loop() {
     memset(response, 0, sizeof(response));
 
     int offset = 0;
-    Serial.println("POSTing sensor data.");
+    // Serial.println("POSTing sensor data.");
     sprintf(body,"user=%s&pressure=%f&altitude=%f&temperature=%f&hello=%s", main_user, pressure, elevation, temperature, num);//generate body, posting to User, 1 step
     int body_len = strlen(body); //calculate body length (for header reporting)
     offset += sprintf(request + offset,"POST http://608dev-2.net/sandbox/sc/team44/w1_sk_server.py HTTP/1.1\r\n");
@@ -743,7 +804,7 @@ void loop() {
     offset += sprintf(request + offset, "%s", body); //body
     offset += sprintf(request + offset,"\r\n"); //new line
     do_http_request("608dev-2.net", request, response, OUT_BUFFER_SIZE, RESPONSE_TIMEOUT,true);
-    Serial.println("Finished the POST");
+    // Serial.println("Finished the POST");
 
 
 
@@ -758,19 +819,27 @@ void loop() {
     // === Compass and Geolocation Stuff ===
 
     set_geo_values();
+    if (current_location.error) {
+      return;
+    }
     ping_timer = millis();
   }
 
   double heading = update_compass();
   double filtered_heading = mag_filter.step(heading);
 
-  double calc_angle = forward_azimuth - filtered_heading + theta0;
-  int actual_angle = angle_in_range(calc_angle);
+  // Serial.printf("Heading: %f\r\n", heading);
+  // Serial.printf("Filtered heading: %f\r\n\n", filtered_heading);
 
-  set_LED_direction(actual_angle);
+  if (millis() - led_timer >= 1000) {
+    double calc_angle = forward_azimuth - filtered_heading + theta0;
+    int actual_angle = angle_in_range(calc_angle);
 
+    set_LED_direction(actual_angle);
+    led_timer = millis();
+  }
 
-
+  run_instrument();
 
 
   while (millis() - primary_timer < LOOP_PERIOD); //wait for primary timer to increment
