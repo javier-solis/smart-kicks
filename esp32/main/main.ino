@@ -120,7 +120,7 @@ const int PING = 10 * ONE_SEC;
 uint32_t ping_timer;
 
 char main_user[60];
-const int main_user_n = sprintf(main_user, "Ayyub"); //  <------------------------------- USER MUST EDIT THIS!!!!!!
+const int main_user_n = sprintf(main_user, "Yaseen"); //  <------------------------------- USER MUST EDIT THIS!!!!!!
 
 bool powered_off = true;
 
@@ -169,15 +169,15 @@ char* SERVER = "googleapis.com";  // Server URL
 // const char NETWORK[] = "EECS_Labs";
 // const char PASSWORD[] = "";
 
-const char NETWORK[] = "18_62";
-const char PASSWORD[] = "";
+// const char NETWORK[] = "18_62";
+// const char PASSWORD[] = "";
 
 // const char NETWORK[] = "608_24G";
 // const char PASSWORD[] = "608g2020";
 
 // Hotspot:                                    //  <------------------------------- USER MUST EDIT THIS!!!!!!
-// const char NETWORK[] = "SLP-F9FD71W0LMX0";
-// const char PASSWORD[] = "bqd1nuuv3nd8d";
+const char NETWORK[] = "SLP-F9FD71W0LMX0";
+const char PASSWORD[] = "bqd1nuuv3nd8d";
 
 // const char NETWORK[] = "806net";
 // const char PASSWORD[] = "kfhe94jcmshfkr";
