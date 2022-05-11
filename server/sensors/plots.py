@@ -1,5 +1,6 @@
 import sqlite3
 import datetime
+from turtle import width
 from bokeh.plotting import figure
 from bokeh.models.formatters import DatetimeTickFormatter
 from bokeh.embed import components
@@ -163,10 +164,12 @@ def request_handler(request):
             plot4.yaxis.axis_label = "steps"
         
           
-            plot2.line(x, altitude, legend_label="altitude", line_dash=[4, 4], line_color="green", line_width=2)
-            plot3.line(x, temperature, legend_label="temperature", line_dash=[4, 4], line_color="blue", line_width=2)
-            plot4.line(stepsx, steps, legend_label="steps", line_dash=[4, 4], line_color="blue", line_width=2)
-
+            plot2.line(x, altitude, legend_label="altitude", line_color="green", line_width=2)
+            plot2.circle(x, altitude)
+            plot3.line(x, temperature, legend_label="temperature", line_color="blue", line_width=2)
+            plot3.circle(x, temperature)
+            plot4.line(stepsx, steps, legend_label="steps", line_color="blue", line_width=2)
+            plot4.circle(stepsx, steps)
             conn.commit()
             conn.close()
             nconn.commit()
