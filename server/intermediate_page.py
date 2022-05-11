@@ -41,7 +41,7 @@ def request_handler(request):
         <div id="interpage">
         <h1>{request['values']['user']}\'s home page!</h1>
         <input class="interbutton" type="submit" id="plots" name="plots" value="see plot data"><br>
-        <input class="interbutton" type="submit" id="maps" name="maps" value="see map data"><br>
+        <input class="interbutton" type="submit" id="maps" name="maps" value="see map data + change destination"><br>
         <input class="interbutton" type="submit" id="logout" name="logout" value="logout"><br>
         <input type="hidden" id="user" name="user" value={request['values']['user']}></input>
         </form>
